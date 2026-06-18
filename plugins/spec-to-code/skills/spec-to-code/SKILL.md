@@ -34,7 +34,7 @@ any-format spec → [normalize] → [find gaps] → [resolve w/ user] → resolv
 | 9 | Visual verify | Playwright screenshots → baseline candidates | — |
 | 10 | **🔁 Review loop** | **E. Review Doc**; review → user → fix → re-review until pass | **GATE (iterative)** |
 | 11 | Comprehensive verify | fill **B**; spec-conformance + full suite + separation audit | — |
-| 12 | **🚪 Gate 2** | report **C** + **D**(report) + **B** + **E** + screenshots; user approves | **HARD STOP** |
+| 12 | **🚪 Gate 2** | report **C** + **D**(report) + **B** + **E** + **F** + screenshots; user approves | **HARD STOP** |
 
 Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), the Review loop (*iterative* — quality/bugs cleaned with the user), Gate 2 (*post-code* — "built it right?"). Everything else flows.
 
@@ -83,7 +83,7 @@ Run the full suite, then audit: conformance (every Artifact-A case demonstrably 
 ### 12 — 🚪 Gate 2 (hard stop)
 Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Review Doc)** + **F (Deferred & Blocked)** + screenshots, and report. The user reviews docs, not raw code. Surface the open F items (what's parked + revisit triggers) and any residual assumptions explicitly. Wait for approval. Never commit unless explicitly told.
 
-## The five artifacts
+## The six artifacts
 
 | | Doc | Purpose | Written |
 |--|-----|---------|---------|

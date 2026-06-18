@@ -1,11 +1,20 @@
 # Artifacts — templates & guidance
 
-Six documents are the user's verification surface. They let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, F whenever something is parked, and C + D(report) + B + E + F at Gate 2. Write them in the user's working language. Store under the doc home chosen in Phase 1 (default `docs/spec-to-code/<feature-slug>/`).
+Six documents (A–F) are the user's verification surface — they let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, F whenever something is parked, and C + D(report) + B + E + F at Gate 2.
 
-Files:
+## Storage, naming & format (authoritative)
+
+- **Where** — all artifacts live in the feature's **doc home**: `docs/spec-to-code/<slug>/` by default. If the repo has its own docs convention (e.g. a top-level `doc/` tree), nest the home under it instead; decide once in Phase 1 and keep it stable.
+- **Slug** — lowercase **kebab-case**, derived from the feature name, ≤ ~40 chars (e.g. `cart-bulk-delete`). This is the feature's identity for update detection; never rename it across updates.
+- **Format** — every artifact is a single **Markdown** file (`.md`) following the templates below. Write prose in the user's working language, but keep table headers/keys as shown so the docs stay machine-parseable on later runs.
+- **Screenshots** — Playwright baselines live where the test framework puts them (alongside the e2e tests, in its `*-snapshots/` dirs) and are committed to the repo; **C links to them**, images are not copied into the doc home.
+- **Code & tests** — go in the **project's own conventional locations** (detected in Phase 1), never the doc home. The doc home holds documents only.
+
+Files (doc home):
 ```
 docs/spec-to-code/<slug>/
-├── working-spec.md    (normalized spec snapshot + source pointers — the diff baseline for updates)
+├── index.md           overview/manifest — links every artifact + run history (mode, dates, status)
+├── working-spec.md    normalized spec snapshot + source pointers — the diff baseline for updates
 ├── A-resolved-spec.md
 ├── B-traceability.md
 ├── C-completion.md
@@ -13,7 +22,27 @@ docs/spec-to-code/<slug>/
 ├── E-review.md        (one section per review round)
 └── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
 ```
-`working-spec.md` is written in Phase 1 (and overwritten on each update); it is the machine-facing normalization, while A is the user-approved contract. The `<slug>` directory name is the feature's identity — how an update finds its prior run.
+`working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while A is the user-approved contract.
+
+---
+
+## index — overview / manifest
+Written first in Phase 1 and updated as artifacts land and on each update run. The one-screen entry point to a feature's run.
+
+```markdown
+# <feature> — spec-to-code
+slug: <slug>
+source: <original spec path(s)/link(s)>
+status: <in progress @ Phase N | complete | blocked>
+
+## Artifacts
+- [working-spec](working-spec.md) · [A resolved spec](A-resolved-spec.md) · [B traceability](B-traceability.md)
+- [C completion](C-completion.md) · [D test doc](D-test-doc.md) · [E review](E-review.md) · [F deferred](F-deferred.md)
+
+## Run history
+- <date> — fresh: <one line>
+- <date> — update: <what changed>
+```
 
 ---
 

@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.6.0
+version: 0.7.0
 ---
 
 # Spec-to-Code
@@ -43,7 +43,7 @@ Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), th
 ### 1 — Ingest & probe
 **Ingest:** specs arrive in any format — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text. Detect the format and normalize it into one analyzable **working spec**, preserving a pointer to each source. For visual sources (HTML/image/Figma), also capture a **visual notes** block (layout, component hierarchy, states) for the UI layer. Lossy formats (a screenshot, a happy-path mockup) omit behavior — those omissions are gaps, fed straight to Phase 2. See `references/spec-ingestion.md`.
 
-**Feature identity & snapshot:** establish a stable **`<slug>`** for the feature (derive from its title/name; confirm with the user). The slug names the doc home `docs/spec-to-code/<slug>/`. **Persist the normalized working spec there as `working-spec.md`**, with a header pointing to the original source file(s)/URL(s). This snapshot — not the user's original file, which stays wherever they keep it — is what a later update diffs against. Never move or edit the user's original spec; only reference it.
+**Feature identity & snapshot:** establish a stable **`<slug>`** for the feature — lowercase kebab-case from its name (e.g. `cart-bulk-delete`); confirm with the user. The slug names the doc home `docs/spec-to-code/<slug>/` (or nest under the repo's own docs convention; decide once). **Persist the normalized working spec there as `working-spec.md`** (header points to the original source file(s)/URL(s)), and create **`index.md`** — the manifest linking every artifact + run history. This snapshot — not the user's original file, which stays wherever they keep it — is what a later update diffs against. Never move or edit the user's original spec; only reference it. All artifacts are Markdown in the doc home; code/tests stay in the project's conventional locations. See `references/documents.md` for the authoritative storage/naming/format rules and templates.
 
 **Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home location (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
 
@@ -68,7 +68,7 @@ Write planned tests before implementation: logic unit tests + UI-behavior tests 
 Logic until logic tests pass; then thin UI over the tested logic until UI-behavior tests pass. Keep the split intact.
 
 ### 9 — Visual verify
-For UIs, run the app and capture Playwright screenshots per state — *baseline candidates* the user blesses at Gate 2, then guarded by `toHaveScreenshot()`. See `references/verification.md`.
+For UIs, run the app and capture Playwright screenshots per state — *baseline candidates* the user blesses at Gate 2, then guarded by `toHaveScreenshot()`. Baselines live where Playwright stores them (its `*-snapshots/` dirs beside the e2e tests) and are committed; C links to them. See `references/verification.md`.
 
 ### 10 — 🔁 Review loop (iterative gate)
 Run an AI code review over the diff with the bundled **`code-reviewer`** agent (`subagent_type: 'code-reviewer'`): spec-faithfulness (vs Artifact A) + correctness/bugs, edge cases, security, simplification/reuse, convention adherence, logic/UI separation. Write findings to **Artifact E (Review Doc)**. Then loop **with the user**:

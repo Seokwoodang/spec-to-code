@@ -29,15 +29,16 @@ For each change, reverse-look-up Matrix B to find the affected **A-cases → tes
 - Re-surface any prior **assumptions/deviations recorded in A** that the new spec now touches — ask the user whether to keep the deviation or correct it to the new spec (do not auto-decide). This mirrors a healthy spec-update discipline: a previously-accepted deviation is not automatically valid under a new spec.
 
 ### U4 — Delta gap analysis + Gate 1
-Added/modified requirements may introduce new gaps — run gap analysis on the delta only and resolve with the user. Then **Gate 1 (hard stop) on the delta**: present the changed decisions (updated A) + changed test plan (updated D) for approval before touching code.
+Added/modified requirements may introduce new gaps — run gap analysis on the delta only and resolve with the user. Open a new **`CHANGELOG.md` entry** for this run capturing the spec diff (U2), the impact set (U3), and a **Tasks checklist** (the concrete to-do for this update). Then **Gate 1 (hard stop) on the delta**: present the changed decisions (updated A) + changed test plan (updated D) **+ the CHANGELOG Tasks checklist** for approval before touching code — this checklist is the user-facing "here's what this update will do."
 
 **Deferring a delta change ("changed in the spec, but not now"):** at this gate the user may decide a changed/added requirement should not be built yet. That decision is not a silent skip — it goes to **Artifact F** with a concrete revisit trigger (same no-silent-drop rule as the main flow), its planned test is marked skipped/pending pointing to the F id, and its Matrix-B row is marked `deferred`. **Critical:** the `working-spec.md` snapshot is still overwritten with the *new* spec (it records what the spec now says), so the deferral would be invisible to the next diff — F + the `deferred` B-row are the only record that the code lags the spec here. They are re-checked at U1 of every future update.
 
 ### U5 — Update artifacts (keep history)
-- **A**: revise the affected decisions; append a dated changelog entry (what changed, why) rather than silently overwriting — the history is audit trail.
+- **A**: revise the affected decisions; append a dated note (what changed, why) rather than silently overwriting.
 - **D**: add test cases for added/modified behavior; mark tests for removed requirements for deletion; mark deferred-delta tests skipped/pending with the F reference.
 - **B**: re-map changed rows; add rows for new cases; remove rows for deleted cases; mark deferred-delta rows `deferred`.
 - **F**: append the deferred delta items (and any newly-blocked work surfaced during the update), each with its revisit trigger.
+- **CHANGELOG**: tick off Tasks as they complete; record the regression result and any deferrals; close the entry as `done` at Gate 2. An unchecked task at Gate 2 = the update is incomplete or the item moved to F.
 
 ### U6 — Delta TDD
 - **Added/modified**: write/adjust tests first. For *modified* behavior, the existing test should now fail (it encodes the old behavior) — update it to the new expectation and confirm RED, then change code to GREEN.

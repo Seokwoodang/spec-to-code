@@ -15,6 +15,7 @@ Files (doc home):
 docs/spec-to-code/<slug>/
 ├── index.md           overview/manifest — links every artifact + run history (mode, dates, status)
 ├── working-spec.md    normalized spec snapshot + source pointers — the diff baseline for updates
+├── CHANGELOG.md       per-run change record — spec diff, impact, task checklist, regression, deferrals
 ├── A-resolved-spec.md
 ├── B-traceability.md
 ├── C-completion.md
@@ -22,7 +23,7 @@ docs/spec-to-code/<slug>/
 ├── E-review.md        (one section per review round)
 └── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
 ```
-`working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while A is the user-approved contract.
+`working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while A is the user-approved contract. `CHANGELOG.md` is the running record of *what each run set out to do and did* (one entry per fresh/update run); `index.md` is the one-screen pointer to everything.
 
 ---
 
@@ -43,6 +44,38 @@ status: <in progress @ Phase N | complete | blocked>
 - <date> — fresh: <one line>
 - <date> — update: <what changed>
 ```
+
+---
+
+## CHANGELOG — per-run plan & record
+The answer to "what has to be done for this update, and what was done." One entry per run (newest on top). In **update** mode it is written during U2–U5 and its **Tasks checklist is shown at the delta Gate 1** as the work plan to approve, then ticked off as the run proceeds and closed with the regression result. A **fresh** run seeds the first entry (the initial build). This is the audit trail of the feature's evolution; `index.md` links here.
+
+```markdown
+# Change Log — <feature>
+
+## <date> · update — <status: planned | in progress | done>
+### Spec diff (vs prior working-spec)
+- modified: <C-id> — <what changed, old → new>
+- added: <new requirement>
+- removed: <requirement>
+### Impact (reverse-lookup via Matrix B)
+| change | A-case | test(s) | code unit | screenshots |
+|--------|--------|---------|-----------|-------------|
+| modify discount cap | C8 | T7 | calcDiscount() | cart-applied |
+### Tasks
+- [ ] update test T7 to new expectation (RED)
+- [ ] change cap logic in calcDiscount()
+- [ ] regression: full prior suite
+- [ ] update A/B/D, screenshots if visual changed
+### Regression
+- full suite: <N/M pass>; intentional changes: <T7>; unexpected breakage: <none | …>
+### Deferred (→ F)
+- <item> — revisit when <trigger>
+
+## <date> · fresh — done
+- initial build: <one line>; <N> cases, <M> tests.
+```
+The Tasks list is the literal "to-do for this update." Keep it honest — an unchecked box at Gate 2 means the update isn't complete (or the item moved to F with a reason).
 
 ---
 

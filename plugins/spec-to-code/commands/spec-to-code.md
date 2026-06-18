@@ -9,7 +9,7 @@ Spec / target: $ARGUMENTS
 
 Follow the flow exactly:
 
-1. **Ingest & probe** — normalize the spec from whatever format it came in (md/HTML/PDF/image/Figma/docx/URL/pasted text) into a working spec, keeping visual notes for UI; then detect test runner, UI presence, Playwright, doc home; read and obey the repo's `CLAUDE.md`.
+1. **Ingest & probe** — normalize the spec from whatever format it came in (md/HTML/PDF/image/Figma/docx/URL/pasted text) into a working spec, keeping visual notes for UI; then detect test runner, UI presence, Playwright, doc home; read and obey the repo's `CLAUDE.md`. **Detect mode:** if prior artifacts exist in the doc home, this is an **UPDATE** — follow the delta path in `references/spec-update.md` (spec diff → impact analysis via Matrix B → delta gaps + Gate 1 → delta TDD → **regression** → review → verify → Gate 2). Otherwise continue fresh below.
 2. **Gap analysis** — find everything the spec leaves undecided. For a large/multi-section spec, fan out the read with the `gap-hunter` agent (one per section, distinct lenses).
 3. **Gap resolution** — batch the gaps into decision questions, put them to the user, and write the **Resolved Spec (A)** + **Test Plan (D)**. Loop until zero open gaps and every requirement is test-shaped.
 4. **🚪 Gate 1 — HARD STOP.** Present A + D; do not write code until the user approves.

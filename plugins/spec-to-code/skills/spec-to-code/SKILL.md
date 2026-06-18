@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Spec-to-Code
@@ -44,6 +44,8 @@ Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), th
 **Ingest:** specs arrive in any format — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text. Detect the format and normalize it into one analyzable **working spec**, preserving a pointer to each source. For visual sources (HTML/image/Figma), also capture a **visual notes** block (layout, component hierarchy, states) for the UI layer. Lossy formats (a screenshot, a happy-path mockup) omit behavior — those omissions are gaps, fed straight to Phase 2. See `references/spec-ingestion.md`.
 
 **Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
+
+**Mode:** check the doc home. If prior artifacts (≥ `A-resolved-spec.md`) exist for this feature, this is an **UPDATE** — switch to the delta path in `references/spec-update.md` (diff the spec, impact-analyze via Matrix B, resolve delta gaps, delta TDD, **regression**). Otherwise it is **FRESH** — continue below.
 
 ### 2 — Gap analysis
 Enumerate everything needed for *complete* code that the working spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional). For a large/multi-section spec, fan out the *reading* with the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) — one per section, distinct lenses — else `Explore`/inline. Resolution stays interactive.
@@ -99,8 +101,12 @@ Full templates: `references/documents.md`. Write artifacts in the user's working
 - Never edit user-managed spec files to match the code; record deviations where the repo expects them and ask.
 - Scale rigor to scope: a one-function spec is lighter than a multi-screen feature — but the resolved-spec rule and the checkpoints always hold.
 
+## Modes: fresh vs update
+This flow runs greenfield **and** for later spec revisions. Phase 1 detects which: prior artifacts in the doc home → **update**; none → **fresh**. The update path (`references/spec-update.md`) diffs old vs new spec, reverse-looks-up Matrix B to find the impacted cases/tests/code, resolves only the delta's gaps (Gate 1 on the delta), does delta TDD, and — critically — runs the **full prior suite as a regression guard** so a revision never silently breaks an existing case. Artifacts A/B/D are updated with history kept, not overwritten. The two-checkpoint discipline and the resolved-spec rule are identical; only the scope narrows to the delta + regression.
+
 ## Resources
 - `references/spec-ingestion.md` — normalizing any input format (md/HTML/PDF/image/Figma/docx/URL)
+- `references/spec-update.md` — update mode: applying a spec revision to existing code (delta + regression)
 - `references/gap-analysis.md` — exhaustive gap taxonomy + questioning patterns
 - `references/verification.md` — the 3-layer test stack (logic TDD · Playwright E2E · screenshot baseline)
 - `references/documents.md` — templates for artifacts A/B/C/D/E

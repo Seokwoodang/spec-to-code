@@ -146,7 +146,7 @@ Disposition is the user's call per finding: `accept → fix` / `reject (<reason>
 ---
 
 ## F — Deferred & Blocked (parking lot)
-The single home for everything that cannot be done now or was consciously postponed — so nothing is silently dropped. A living doc: append to it the moment something is parked, in any phase. Reviewed at Gate 2, and re-checked at the start of every update run.
+The single home for everything that cannot be done now or was consciously postponed — so nothing is silently dropped. A living doc: append to it the moment something is parked, in any phase. Reviewed at Gate 2, and — crucially — **proactively surfaced at the start of every run that resumes the feature**: open F items are presented to the user with the question "take any of these on now?" before work proceeds, so a deferral is never forgotten across sessions.
 
 What lands here:
 - gaps the user chose to defer (Phase 3);

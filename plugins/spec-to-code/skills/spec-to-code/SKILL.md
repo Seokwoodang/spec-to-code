@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.8.0
+version: 0.9.0
 ---
 
 # Spec-to-Code
@@ -48,6 +48,8 @@ Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), th
 **Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home location (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
 
 **Mode:** list existing slugs under `docs/spec-to-code/`. If one holds prior artifacts (`working-spec.md` + ≥ `A-resolved-spec.md`) for **this** feature, it is an **UPDATE** — diff the new working spec against the saved `working-spec.md` and follow `references/spec-update.md` (impact-analyze via Matrix B, resolve delta gaps, delta TDD, **regression**), then overwrite the snapshot. Otherwise it is **FRESH** — continue below. If it's ambiguous which slug a revision targets (e.g. the new spec file is named differently), **ask the user** rather than guess; a wrong match corrupts the diff.
+
+**Deferred check (proactive, on every resume):** whenever a run targets a feature whose `F-deferred.md` has open items, **surface them up front and ask the user which to take on now** — before proceeding. Do not leave a "not now" silently parked across sessions. This fires on *any* resumption — an update run, or simply returning to the feature with no spec change — so every deferral is actively revisited with the user, never forgotten. Flag items whose revisit trigger has plausibly fired (e.g. the blocking backend endpoint now exists). Items the user again defers stay in F with their triggers; items picked up join this run's scope.
 
 ### 2 — Gap analysis
 Enumerate everything needed for *complete* code that the working spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional). For a large/multi-section spec, fan out the *reading* with the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) — one per section, distinct lenses — else `Explore`/inline. Resolution stays interactive.

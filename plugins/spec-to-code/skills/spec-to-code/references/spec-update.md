@@ -15,7 +15,7 @@ In update mode, two saved files do the heavy lifting: the **`working-spec.md` sn
 ## The delta path
 
 ### U1 — Ingest new spec + load priors
-Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E/F and the saved **`working-spec.md`** snapshot (the baseline to diff against). **Re-check Artifact F**: for each open blocked/deferred item, ask whether its revisit trigger has now fired (e.g. the backend endpoint shipped, the milestone arrived). Promote any now-unblocked item into this update's scope; leave the rest parked with their triggers intact.
+Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E/F and the saved **`working-spec.md`** snapshot (the baseline to diff against). **Surface Artifact F to the user** (the proactive resume check from Phase 1): present every open blocked/deferred item and ask which to take on now — flag those whose revisit trigger has plausibly fired (backend shipped, milestone arrived). Promote the chosen items into this update's scope; leave the rest parked with their triggers intact. This is an active prompt, not a silent re-check — a "not now" from a prior run is always put back to the user.
 
 ### U2 — Spec diff
 Compare the saved `working-spec.md` (old) vs the newly normalized spec (new) and classify each requirement change. Ignore pure wording/format churn. After resolution, overwrite `working-spec.md` with the new normalized spec so the next update diffs against the latest.

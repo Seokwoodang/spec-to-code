@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "spec-to-code",
+  "description": "Marketplace hosting the spec-to-code plugin — a gated, test-driven flow that turns incomplete specs into complete, verified code.",
+  "owner": {
+    "name": "Seokwoo Kang",
+    "email": "swkang@parametacorp.com"
+  },
+  "plugins": [
+    {
+      "name": "spec-to-code",
+      "description": "A gated TDD flow that turns an incomplete or ambiguous spec into complete, verified code: find gaps, resolve them with the user before any code, then prove the result with tests, screenshots, and traceability docs.",
+      "source": "./plugins/spec-to-code",
+      "category": "development"
+    }
+  ]
+}

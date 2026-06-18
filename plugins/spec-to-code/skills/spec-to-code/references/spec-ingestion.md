@@ -28,7 +28,12 @@ Never assume `.md`. Ask only if the input is genuinely unidentifiable.
 
 Produce a single **working spec**: the requirements as analyzable text, section by section, with a pointer back to each source. This is the input to gap analysis (Phase 2) — not a rewrite the user must approve (that is the Resolved Spec, Artifact A, which comes after gaps are resolved).
 
-**Persist it.** Save the normalized working spec to `docs/spec-to-code/<slug>/working-spec.md`, with a header recording the original source(s) (file paths / URLs / "pasted on first run"). This snapshot is the stable thing a later **update** diffs the revised spec against — the user's original file may move, be edited in place, or have been a transient paste, so relying on it for the diff is unsafe. On an update run, diff the new normalized working spec against this saved snapshot, then overwrite it (git history preserves the prior version).
+**Persist two things:**
+
+1. **Archive the original, verbatim** — copy what the user provided into `docs/spec-to-code/<slug>/source/<date>-original.<ext>`: a pasted spec saved as `.md`, a file copied as-is, an image copied in, a URL saved as its fetched/rendered snapshot (record the URL too). The user's own file stays where it is — this is a *copy*, so the no-touch rule still holds. Each run adds its original; never delete prior ones. Without this, a transient paste or a later-changed Figma/URL leaves nothing to verify normalization against or to re-normalize from.
+2. **Save the normalized working spec** to `working-spec.md`, with a header pointing to the archived original it was derived from.
+
+**Diff baseline = `working-spec.md` (normalized), not the raw originals** — run-to-run the original format may differ (PDF this time, HTML next), so only the normalized form is reliably comparable. On an update, diff the new normalized spec against the saved `working-spec.md`, then overwrite it (git history keeps the prior). The archived originals are there for fidelity-checking, re-normalization, and — when two runs share a format — a direct original-vs-original sanity diff.
 
 For **visual sources** (HTML, images, Figma), additionally capture a **visual notes** block: layout, spacing intent, component hierarchy, explicit and implied states, and any annotations. This feeds both gap analysis (e.g. "what does the error state look like?") and the UI/appearance layers later.
 

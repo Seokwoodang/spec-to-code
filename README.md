@@ -41,6 +41,7 @@
 
 ```
 docs/spec-to-code/<slug>/
+├── source/            run별 원본 기획서 verbatim 아카이브 (<date>-original.<ext>)
 ├── index.md           개요/매니페스트 — 전체 산출물 링크 + 작업 이력(모드·날짜·상태)
 ├── working-spec.md    정규화 기획서 스냅샷 (업데이트 diff 기준) + 원본 소스 포인터
 ├── CHANGELOG.md       run별 변경 기록 — spec diff·영향·할 일 체크리스트·회귀·미룬 것

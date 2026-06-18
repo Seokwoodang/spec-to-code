@@ -13,6 +13,7 @@ Six documents (A–F) are the user's verification surface — they let the user 
 Files (doc home):
 ```
 docs/spec-to-code/<slug>/
+├── source/            verbatim archive of each run's original spec (<date>-original.<ext>)
 ├── index.md           overview/manifest — links every artifact + run history (mode, dates, status)
 ├── working-spec.md    normalized spec snapshot + source pointers — the diff baseline for updates
 ├── CHANGELOG.md       per-run change record — spec diff, impact, task checklist, regression, deferrals

@@ -14,7 +14,8 @@ any-format spec → [normalize] → [find gaps] → [resolve with user] → reso
 - **Fresh & update modes** — runs greenfield, and re-runs on later spec revisions as a *delta*: diff the spec, impact-analyze via the traceability matrix, apply only the change, and run the full prior suite as a regression guard so a revision never silently breaks an existing case.
 - **Three human checkpoints** — approve the *resolved spec + test plan* before any code (Gate 1); drive an iterative *code-review loop* (review → comment → fix → re-review until pass); approve the *completion package* after (Gate 2).
 - **3-layer verification** — logic (unit-test TDD, red→green), UI behavior (Playwright E2E), UI appearance (Playwright screenshot baselines you bless once, then guarded automatically).
-- **5 artifacts** as your verification surface — Resolved Spec, Test Doc, Traceability Matrix, Review Doc, Completion Doc — so you confirm the work from docs, not raw code.
+- **6 artifacts** as your verification surface — Resolved Spec, Test Doc, Traceability Matrix, Review Doc, Deferred & Blocked, Completion Doc — so you confirm the work from docs, not raw code.
+- **No silent drop** — anything blocked (e.g. backend not ready), deferred, or out-of-scope lands in the *Deferred & Blocked* parking lot with a concrete revisit trigger, and is re-checked on every update run.
 - **Bundled agents** — `gap-hunter` (parallel gap analysis), `code-reviewer` (review loop), `spec-verifier` (adversarial verification).
 - **Project-agnostic** — detects the test runner, whether a UI exists, and Playwright; adapts accordingly.
 

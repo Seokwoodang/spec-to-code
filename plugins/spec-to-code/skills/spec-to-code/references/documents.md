@@ -1,6 +1,6 @@
 # Artifacts — templates & guidance
 
-Five documents are the user's verification surface. They let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, and C + D(report) + B + E at Gate 2. Write them in the user's working language. Store under the doc home chosen in Phase 1 (default `docs/spec-to-code/<feature-slug>/`).
+Six documents are the user's verification surface. They let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, F whenever something is parked, and C + D(report) + B + E + F at Gate 2. Write them in the user's working language. Store under the doc home chosen in Phase 1 (default `docs/spec-to-code/<feature-slug>/`).
 
 Files:
 ```
@@ -9,7 +9,8 @@ docs/spec-to-code/<slug>/
 ├── B-traceability.md
 ├── C-completion.md
 ├── D-test-doc.md      (Plan section first; Report section appended in P11)
-└── E-review.md        (one section per review round)
+├── E-review.md        (one section per review round)
+└── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
 ```
 
 ---
@@ -113,6 +114,31 @@ Disposition is the user's call per finding: `accept → fix` / `reject (<reason>
 
 ---
 
+## F — Deferred & Blocked (parking lot)
+The single home for everything that cannot be done now or was consciously postponed — so nothing is silently dropped. A living doc: append to it the moment something is parked, in any phase. Reviewed at Gate 2, and re-checked at the start of every update run.
+
+What lands here:
+- gaps the user chose to defer (Phase 3);
+- review findings dispositioned `defer` (Phase 10);
+- work blocked on something external (backend/API not ready, design pending, upstream decision);
+- out-of-scope items discovered mid-flow;
+- decisions the user wants to postpone.
+
+```markdown
+# Deferred & Blocked — <feature>
+
+| ID | Item | Origin | Reason | Revisit when | Links | Status |
+|----|------|--------|--------|--------------|-------|--------|
+| F1 | bulk-delete UX | gap P3 | postponed (v2) | next milestone | A:C7 | open |
+| F2 | retry on 503 | review R1-4 | blocked-on backend retry header | endpoint ships | A:C3, B-row | open |
+| F3 | i18n of error copy | P8 impl | out-of-scope this PR | i18n epic | — | open |
+```
+Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. **Revisit when** is a concrete condition or date, never blank — a parked item with no trigger is a lost item.
+
+**No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its Matrix-B row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
+
+---
+
 ## C — Completion Doc
 The post-code report for Gate 2. Lets the user judge "built right" from docs + screenshots.
 
@@ -144,8 +170,8 @@ date: <>   status: awaiting Gate-2 approval
 ## Screenshots (appearance baselines — need your bless)
 - <state>: <path/embed>
 
-## Residual gaps / assumptions / deviations
-- <anything not fully closed, or any repo-deviation recorded>
+## Deferred / blocked / residual (from F)
+- <summarize open F items: what's parked and the revisit trigger; plus any assumptions/deviations recorded>
 
 ## Open for approval
 - [ ] Baselines blessed

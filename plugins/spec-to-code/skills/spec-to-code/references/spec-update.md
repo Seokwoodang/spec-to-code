@@ -13,7 +13,7 @@ Confirm with the user which feature/slug the revision targets if ambiguous. In u
 ## The delta path
 
 ### U1 — Ingest new spec + load priors
-Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E. Keep the old working spec to diff against.
+Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E/F. Keep the old working spec to diff against. **Re-check Artifact F**: for each open blocked/deferred item, ask whether its revisit trigger has now fired (e.g. the backend endpoint shipped, the milestone arrived). Promote any now-unblocked item into this update's scope; leave the rest parked with their triggers intact.
 
 ### U2 — Spec diff
 Compare old vs new working spec and classify each requirement change. Ignore pure wording/format churn.

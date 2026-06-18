@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.4.0
+version: 0.5.0
 ---
 
 # Spec-to-Code
@@ -81,7 +81,7 @@ Do not proceed to Phase 11 until the loop passes. This is the user's "review →
 Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline.
 
 ### 12 — 🚪 Gate 2 (hard stop)
-Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Review Doc)** + screenshots, and report. The user reviews docs, not raw code. Surface residual gaps/assumptions. Wait for approval. Never commit unless explicitly told.
+Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Review Doc)** + **F (Deferred & Blocked)** + screenshots, and report. The user reviews docs, not raw code. Surface the open F items (what's parked + revisit triggers) and any residual assumptions explicitly. Wait for approval. Never commit unless explicitly told.
 
 ## The five artifacts
 
@@ -91,9 +91,12 @@ Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Revie
 | D | Test Doc | Plan (case list) → Report (results, coverage) | Plan P3 · Report P11 |
 | B | Traceability Matrix | spec ↔ test ↔ code ↔ pass — coverage proof | P5 draft → P11 fill |
 | E | Review Doc | code-review findings, per round, with dispositions | P10 |
+| F | Deferred & Blocked | parking lot — blocked/deferred/out-of-scope, with revisit triggers | any phase (living) |
 | C | Completion Doc | summary, decisions, how-to-run/verify, screenshots, residual gaps | P11–12 |
 
 Full templates: `references/documents.md`. Write artifacts in the user's working language. Matrix B is the spine of "did you do it right" — an empty cell is an admission, never hide one.
+
+**No silent drop:** anything that cannot be done now or is postponed goes to **Artifact F** the moment it arises (a deferred gap, a `defer`-dispositioned review finding, work blocked on a backend/external dependency, an out-of-scope discovery). Each F entry carries a concrete revisit trigger. If a parked item maps to an A-case, its test is marked skipped/pending with a reason pointing to the F id and its B-row is marked `deferred` — never quietly passed or blank.
 
 ## Guardrails
 - Three human checkpoints (Gate 1, Review loop, Gate 2) are mandatory; never skip them to "save time."
@@ -109,6 +112,6 @@ This flow runs greenfield **and** for later spec revisions. Phase 1 detects whic
 - `references/spec-update.md` — update mode: applying a spec revision to existing code (delta + regression)
 - `references/gap-analysis.md` — exhaustive gap taxonomy + questioning patterns
 - `references/verification.md` — the 3-layer test stack (logic TDD · Playwright E2E · screenshot baseline)
-- `references/documents.md` — templates for artifacts A/B/C/D/E
+- `references/documents.md` — templates for artifacts A/B/C/D/E/F
 - `scripts/verify-workflow.js` — Workflow harness for the Phase-11 comprehensive verification fan-out
 - Bundled agents (when installed via the plugin): **`gap-hunter`** (P2 gap reading), **`code-reviewer`** (P10 review loop), **`spec-verifier`** (P11 adversarial verify). The skill degrades gracefully to `Explore`/inline if absent.

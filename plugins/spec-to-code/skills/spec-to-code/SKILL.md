@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec and asked to code it properly with tests and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.1.0
+version: 0.2.0
 ---
 
 # Spec-to-Code
@@ -48,7 +48,7 @@ This skill is project-agnostic, so first learn the environment. Detect, do not a
 - **Read the repo's `CLAUDE.md`/contributing rules and obey them** — especially "do not commit without explicit instruction" and any "do not touch spec files" rules. This skill never commits on its own.
 
 ### 2 — Gap analysis
-Read the spec and enumerate everything needed for *complete* code that the spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the full taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional limits). For a large or multi-screen spec, fan this out with the Workflow tool (one reader per section) — but only the *reading*; resolution stays interactive.
+Read the spec and enumerate everything needed for *complete* code that the spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the full taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional limits). For a large or multi-screen spec, fan this out — one reader per section, distinct lenses — using the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) if available, else the `Explore` agent or inline reading. Fan out only the *reading*; resolution stays interactive in the main loop.
 
 ### 3 — Gap resolution
 Group gaps into a small number of decision questions and put them to the user (use `AskUserQuestion` for crisp choices; prose for open ones). Batch — do not drip one question at a time. As answers land, write them into **Artifact A (Resolved Spec)** and derive **Artifact D (Test Plan)** — the case list each test will cover. Templates: `references/documents.md`. Loop until zero open gaps and every requirement maps to at least one planned test.
@@ -69,7 +69,7 @@ Implement logic until logic tests pass; then build the UI layer on the tested lo
 For UIs, run the app and capture Playwright screenshots of each relevant state. These are *baseline candidates* — the user blesses them at Gate 2; once blessed, `toHaveScreenshot()` guards them. See `references/verification.md`.
 
 ### 10 — Comprehensive verify
-Run the full suite, then audit: spec-conformance (every Artifact-A case demonstrably covered), traceability matrix fully filled (no `TODO` rows — empty cells = unfinished work, say so), and logic/UI separation respected. This audit is a good Workflow fan-out (conformance / coverage / separation as parallel dimensions, each adversarially verified). See `scripts/verify-workflow.js` for a ready harness — adapt it to the detected test commands. Only call Workflow if the user has opted into multi-agent orchestration; otherwise run the audit inline.
+Run the full suite, then audit: spec-conformance (every Artifact-A case demonstrably covered), traceability matrix fully filled (no `TODO` rows — empty cells = unfinished work, say so), and logic/UI separation respected. This audit is a good Workflow fan-out (conformance / coverage / separation as parallel dimensions, each adversarially verified by the bundled **`spec-verifier`** agent). See `scripts/verify-workflow.js` for a ready harness — adapt it to the detected test commands. Only call Workflow if the user has opted into multi-agent orchestration; otherwise run the audit inline.
 
 ### 11 — 🚪 Gate 2 (hard stop)
 Compile **Artifact C (Completion Doc)** + **D (Test Report)** + filled **B** + screenshots, and report. The user reviews docs, not raw code. Surface any residual gaps or assumptions explicitly. Wait for approval. Do not commit unless the user explicitly says to.
@@ -96,3 +96,4 @@ Full templates and writing guidance: `references/documents.md`. Write artifacts 
 - `references/verification.md` — the 3-layer test stack (logic TDD · Playwright E2E · screenshot baseline) and how to detect/run each
 - `references/documents.md` — templates for artifacts A/B/C/D
 - `scripts/verify-workflow.js` — Workflow harness for the Phase-10 comprehensive verification fan-out
+- Bundled agents (when installed via the plugin): **`gap-hunter`** (Phase 2 parallel gap reading) and **`spec-verifier`** (Phase 10 adversarial verification). The skill degrades gracefully to `Explore`/inline if they are absent.

@@ -75,7 +75,8 @@ const results = await pipeline(
       (review?.findings || []).map(f => () =>
         agent(
           `Adversarially verify this ${dim.key} finding. Default to real=false unless the evidence clearly holds. Finding: ${f.claim}\nEvidence: ${f.evidence}\nLocation: ${f.location || 'n/a'}\nContext:${ctx}`,
-          { label: `verify:${dim.key}:${f.id}`, phase: 'Verify', schema: VERDICT_SCHEMA }
+          // agentType: 'spec-verifier' is used when the plugin is installed; harmless to omit if running the skill standalone.
+          { label: `verify:${dim.key}:${f.id}`, phase: 'Verify', schema: VERDICT_SCHEMA, agentType: 'spec-verifier' }
         ).then(v => ({ ...f, dimension: dim.key, verdict: v }))
       )
     )

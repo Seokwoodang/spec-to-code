@@ -1,46 +1,135 @@
 # spec-to-code
 
-A Claude Code plugin: a **gated, test-driven flow that turns an incomplete spec into complete, verified code.**
+**불완전한 기획서를 완성된·검증된 코드로 바꾸는 Claude Code 플러그인.**
 
-The value is the work *between* spec and code — finding what the spec leaves unsaid, resolving it with you, and proving the result. Code is never written from an unresolved spec.
-
-## What it does
+핵심 가치는 기획서와 코드 *사이*의 작업에 있습니다 — 기획서가 말하지 않은 빈 곳을 찾아내고, 사용자와 함께 메우고, 결과를 증명하는 것. **확정되지 않은 기획서로는 절대 코드를 쓰지 않습니다.**
 
 ```
-any-format spec → [normalize] → [find gaps] → [resolve with user] → resolved spec → TDD code → review loop → proof docs
+어떤 포맷의 기획서 → [정규화] → [갭 발견] → [사용자와 해소] → 확정 명세 → TDD 코드 → 리뷰 루프 → 증명 문서
 ```
 
-- **Any spec format** — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text are normalized into a working spec (visual cues preserved for the UI layer).
-- **Fresh & update modes** — runs greenfield, and re-runs on later spec revisions as a *delta*: diff the spec, impact-analyze via the traceability matrix, apply only the change, and run the full prior suite as a regression guard so a revision never silently breaks an existing case.
-- **Three human checkpoints** — approve the *resolved spec + test plan* before any code (Gate 1); drive an iterative *code-review loop* (review → comment → fix → re-review until pass); approve the *completion package* after (Gate 2).
-- **3-layer verification** — logic (unit-test TDD, red→green), UI behavior (Playwright E2E), UI appearance (Playwright screenshot baselines you bless once, then guarded automatically).
-- **6 artifacts** as your verification surface — Resolved Spec, Test Doc, Traceability Matrix, Review Doc, Deferred & Blocked, Completion Doc — so you confirm the work from docs, not raw code.
-- **No silent drop** — anything blocked (e.g. backend not ready), deferred, or out-of-scope lands in the *Deferred & Blocked* parking lot with a concrete revisit trigger, and is re-checked on every update run.
-- **Bundled agents** — `gap-hunter` (parallel gap analysis), `code-reviewer` (review loop), `spec-verifier` (adversarial verification).
-- **Project-agnostic** — detects the test runner, whether a UI exists, and Playwright; adapts accordingly.
+---
 
-## Install
+## 설치
 
 ```
-/plugin marketplace add <your-github-owner>/spec-to-code
+/plugin marketplace add Seokwoodang/spec-to-code
 /plugin install spec-to-code@spec-to-code
 ```
 
-Then run `/spec-to-code` (or hand Claude a spec and ask it to implement it properly).
+설치하면 `/spec-to-code` 커맨드, 스킬, 번들 에이전트 3종이 활성화됩니다.
 
-## Layout
+> 업데이트가 나오면 `/plugin` 메뉴에서 받을 수 있습니다.
+
+---
+
+## 사용법
+
+기획서를 던지기만 하면 됩니다 — 포맷은 자유 (md · HTML · PDF · 이미지/Figma · docx · URL · 붙여넣기 텍스트):
 
 ```
-.claude-plugin/marketplace.json      marketplace manifest
+/spec-to-code  docs/feature-x.md
+```
+
+이후 **사용자는 딱 3곳에서만 개입**하고, 나머지(갭 조사·설계·테스트·구현·검증)는 자동으로 진행됩니다:
+
+| 체크포인트 | 받는 것 | 하는 것 |
+|---|---|---|
+| 🚪 **Gate 1** (코딩 전) | 갭 질문 + 확정 명세(A) + 테스트 계획(D) | 빈 곳 답하고 → 진행 승인 |
+| 🔁 **리뷰 루프** (반복) | 리뷰 문서(E)의 findings | finding별 accept/reject/defer → 통과 시 다음 |
+| 🚪 **Gate 2** (완료 후) | 완료 문서(C) + 테스트 결과 + 스크린샷 + 미결(F) | baseline 승인 → 최종 OK |
+
+산출물은 `docs/spec-to-code/<기능명>/` 에 쌓이고, 커밋은 **사용자가 명시적으로 지시할 때만** 합니다.
+
+### 기획서가 나중에 바뀌면
+
+같은 기능에 새 기획서를 주면서 다시 `/spec-to-code` → **자동 업데이트 모드**. 바뀐 부분만 델타로 반영하고, 기존 전체 테스트를 회귀 검사해서 **개정이 기존 케이스를 조용히 깨뜨리지 않게** 보장합니다.
+
+---
+
+## 동작 방식
+
+### 12 페이즈 플로우
+
+| # | 페이즈 | 산출 | 정지 |
+|---|--------|------|------|
+| 1 | Ingest & probe | 정규화된 working spec + 환경 탐지 (러너/UI/Playwright/모드) | — |
+| 2 | 갭 분석 | 갭 목록 (전수) | — |
+| 3 | 갭 해소 | **A. 확정 명세** + **D. 테스트 계획** | — |
+| 4 | **🚪 Gate 1** | 사용자가 A + D 승인 | **하드 스톱** |
+| 5 | 설계 | 로직/UI 분리 + **B. 추적 매트릭스**(초안) | — |
+| 6 | 테스트 먼저 | 로직 단위테스트 + UI 동작 테스트 — **RED** | — |
+| 7 | 로직 구현 | 로직 테스트 **GREEN** | — |
+| 8 | UI 구현 | UI 동작 테스트 **GREEN** | — |
+| 9 | 시각 검증 | Playwright 스크린샷 → baseline 후보 | — |
+| 10 | **🔁 리뷰 루프** | **E. 리뷰 문서**; 리뷰 → 사용자 → 수정 → 재리뷰, 통과까지 | **게이트(반복)** |
+| 11 | 종합 검증 | **B** 채움; spec 정합 + 전체 suite + 분리 감사 | — |
+| 12 | **🚪 Gate 2** | **C** + **D**(리포트) + **B** + **E** + **F** + 스크린샷 보고 | **하드 스톱** |
+
+### 두 가지 핵심 룰
+
+1. **갭은 사용자가 해소한다** — 기획서가 침묵/모호하면 추론하지 않고 묻는다. (사소·가역·관례적 기본값만 보고 후 가정 허용)
+2. **테스트로 못 쓰는 요구는 아직 갭이다** — 테스트 불가 = 명세 부족. 코딩 전에 사용자에게 돌려보낸다.
+
+### 검증 3층
+
+| 층 | 검증 대상 | 도구 |
+|----|-----------|------|
+| 로직 | 규칙·계산·상태기계·에러 처리 | 단위테스트 TDD (red→green) |
+| UI 동작 | 상태→화면, 인터랙션, 조건부 렌더, 에러 표시 | Playwright E2E |
+| UI 외형 | 픽셀·레이아웃·정렬·스타일 | Playwright 스크린샷 (사용자가 1회 baseline 승인 → 이후 자동 회귀 감시) |
+
+### 산출물 6종 (사용자의 검증 표면)
+
+코드를 다 읽지 않고 문서로 "제대로 했는지" 확인하기 위한 문서들:
+
+- **A. 확정 명세** — 모든 결정·케이스·엣지·에러를 못박은 계약
+- **B. 추적 매트릭스** — 명세 ↔ 테스트 ↔ 코드 ↔ 통과여부 (커버리지 증명; 빈 칸 = 미완료)
+- **C. 완료 문서** — 요약·결정·실행/검증법·스크린샷
+- **D. 테스트 문서** — 계획(케이스 목록) → 리포트(결과·커버리지)
+- **E. 리뷰 문서** — 라운드별 리뷰 findings + 처분
+- **F. 미결/보류 (parking lot)** — 막힘(예: 백엔드 미준비)·미룸·out-of-scope 를 **재개 트리거와 함께** 모으는 단일 파일. 무엇도 조용히 누락되지 않음 (**no silent drop**), 업데이트 때마다 재점검.
+
+### 번들 에이전트 (전부 읽기 전용)
+
+- **gap-hunter** — Phase 2 병렬 갭 조사 (섹션별·렌즈별)
+- **code-reviewer** — Phase 10 리뷰 루프 (확정 명세 대조 + 품질/버그/보안/분리)
+- **spec-verifier** — Phase 11 적대적 검증 (refute-by-default)
+
+스킬은 에이전트가 없는 환경에서도 `Explore`/인라인으로 **graceful fallback** 됩니다.
+
+---
+
+## 디렉토리 구조
+
+```
+.claude-plugin/marketplace.json      마켓플레이스 매니페스트
 plugins/spec-to-code/
-├── .claude-plugin/plugin.json       plugin manifest
-├── commands/spec-to-code.md         /spec-to-code entry point
+├── .claude-plugin/plugin.json       플러그인 매니페스트
+├── commands/spec-to-code.md         /spec-to-code 진입점
 ├── agents/
-│   ├── gap-hunter.md                parallel gap analysis (read-only)
-│   ├── code-reviewer.md             review-loop reviewer (read-only)
-│   └── spec-verifier.md             adversarial verification (read-only)
+│   ├── gap-hunter.md                병렬 갭 분석 (읽기전용)
+│   ├── code-reviewer.md             리뷰 루프 리뷰어 (읽기전용)
+│   └── spec-verifier.md             적대적 검증 (읽기전용)
 └── skills/spec-to-code/
-    ├── SKILL.md                     the flow (spine)
-    ├── references/                  ingestion · gap taxonomy · verification stack · doc templates
-    └── scripts/verify-workflow.js   Phase-11 comprehensive-verification workflow
+    ├── SKILL.md                     플로우 본체 (척추)
+    ├── references/
+    │   ├── spec-ingestion.md        포맷별 수집·정규화
+    │   ├── gap-analysis.md          갭 택소노미 + 질문 패턴
+    │   ├── verification.md          검증 3층 스택
+    │   ├── documents.md             산출물 A~F 템플릿
+    │   └── spec-update.md           업데이트(델타) 모드
+    └── scripts/verify-workflow.js   Phase 11 종합검증 워크플로우
 ```
+
+---
+
+## 기여 / 업데이트
+
+```bash
+# 스킬/에이전트 수정 후
+# plugins/spec-to-code/.claude-plugin/plugin.json 의 version 올리고
+git add -A && git commit -m "..." && git push
+```
+
+push하면 마켓플레이스에 반영되고, 사용자는 `/plugin` 메뉴에서 업데이트를 받습니다.

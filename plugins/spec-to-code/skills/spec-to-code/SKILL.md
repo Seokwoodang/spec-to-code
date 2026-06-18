@@ -51,6 +51,8 @@ Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), th
 
 **Deferred check (proactive, on every resume):** whenever a run targets a feature whose `F-deferred.md` has open items, **surface them up front and ask the user which to take on now** — before proceeding. Do not leave a "not now" silently parked across sessions. This fires on *any* resumption — an update run, or simply returning to the feature with no spec change — so every deferral is actively revisited with the user, never forgotten. Flag items whose revisit trigger has plausibly fired (e.g. the blocking backend endpoint now exists). Items the user again defers stay in F with their triggers; items picked up join this run's scope.
 
+**Tier (full vs lite):** run a **quick gap scan** (inline, not the exhaustive fan-out) to size the change, then pick the tier — **lite** for small, low-risk changes (zero blocker gaps, no new external dependency, small blast radius, e.g. "add one more button"); **full** otherwise. The user may request lite explicitly; honor it unless the scan finds a blocker, then escalate. Lite collapses the flow to 4 steps / 1 gate / a single CHANGELOG entry while keeping the safety core (user-resolved gaps, test-first, regression, no unprompted commit) — see `references/lite-mode.md`. If a lite run proves bigger than it looked, **escalate to full** mid-run and tell the user. The rest of this document is the **full** flow.
+
 ### 2 — Gap analysis
 Enumerate everything needed for *complete* code that the working spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional). For a large/multi-section spec, fan out the *reading* with the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) — one per section, distinct lenses — else `Explore`/inline. Resolution stays interactive.
 
@@ -111,7 +113,11 @@ Full templates: `references/documents.md`. Write artifacts in the user's working
 ## Modes: fresh vs update
 This flow runs greenfield **and** for later spec revisions. Phase 1 detects which: prior artifacts in the doc home → **update**; none → **fresh**. The update path (`references/spec-update.md`) diffs old vs new spec, reverse-looks-up Matrix B to find the impacted cases/tests/code, and records the work as a **`CHANGELOG.md` entry whose Tasks checklist is the user-facing "what this update will do"** — presented at the delta Gate 1 for approval. It then resolves only the delta's gaps, does delta TDD, and — critically — runs the **full prior suite as a regression guard** so a revision never silently breaks an existing case. Artifacts A/B/D/F are updated with history kept, and the CHANGELOG tasks are ticked off to completion. The checkpoint discipline and the resolved-spec rule are identical; only the scope narrows to the delta + regression.
 
+## Tiers: full vs lite
+Orthogonal to fresh/update. **Full** (this document's 12 phases) is for large or uncertain work. **Lite** (`references/lite-mode.md`) is for small, well-scoped changes — 4 steps, 1 confirmation gate, a single CHANGELOG entry instead of A–F, inline review, no agent fan-out. Tier is chosen by *scope* (decided by the quick scan in Phase 1), not by mode: a small fresh task and a small update are both lite; a large rework is full. The **safety core never changes** — gaps resolved by the user, test-first, regression on updates, no unprompted commit. A lite run **escalates to full** the moment a blocker, hidden complexity, or unexpected regression appears, so lite never silently swallows a big change.
+
 ## Resources
+- `references/lite-mode.md` — the lite tier (small changes): L1–L4 path, safety core, escalation bridge
 - `references/spec-ingestion.md` — normalizing any input format (md/HTML/PDF/image/Figma/docx/URL)
 - `references/spec-update.md` — update mode: applying a spec revision to existing code (delta + regression)
 - `references/gap-analysis.md` — exhaustive gap taxonomy + questioning patterns

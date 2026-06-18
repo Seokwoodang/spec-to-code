@@ -7,6 +7,8 @@ Run the **spec-to-code** flow on the spec below (or at the path) — see the `sp
 
 Spec / target: $ARGUMENTS
 
+**Pick the tier first** (Phase 1 quick scan): for a small, low-risk change ("add one button", "tweak this") run the **lite** path (`references/lite-mode.md`) — 4 steps, 1 gate, a single CHANGELOG entry; for large/uncertain work run the **full** 12-phase flow below. Honor an explicit "lite" request unless the scan finds a blocker → escalate to full. The safety core (user-resolved gaps, test-first, regression, no unprompted commit) holds in both.
+
 Follow the flow exactly:
 
 1. **Ingest & probe** — normalize the spec from whatever format it came in (md/HTML/PDF/image/Figma/docx/URL/pasted text) into a working spec, keeping visual notes for UI; then detect test runner, UI presence, Playwright, doc home; read and obey the repo's `CLAUDE.md`. **Detect mode:** if prior artifacts exist in the doc home, this is an **UPDATE** — follow the delta path in `references/spec-update.md` (spec diff → impact analysis via Matrix B → delta gaps + Gate 1 → delta TDD → **regression** → review → verify → Gate 2). Otherwise continue fresh below.

@@ -7,12 +7,14 @@ The value is the work *between* spec and code — finding what the spec leaves u
 ## What it does
 
 ```
-incomplete spec → [find gaps] → [resolve with user] → resolved spec → TDD code → proof docs
+any-format spec → [normalize] → [find gaps] → [resolve with user] → resolved spec → TDD code → review loop → proof docs
 ```
 
-- **Two human gates** — you approve the *resolved spec + test plan* before any code (Gate 1), and the *completion doc + test report + screenshots* after (Gate 2).
+- **Any spec format** — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text are normalized into a working spec (visual cues preserved for the UI layer).
+- **Three human checkpoints** — approve the *resolved spec + test plan* before any code (Gate 1); drive an iterative *code-review loop* (review → comment → fix → re-review until pass); approve the *completion package* after (Gate 2).
 - **3-layer verification** — logic (unit-test TDD, red→green), UI behavior (Playwright E2E), UI appearance (Playwright screenshot baselines you bless once, then guarded automatically).
-- **4 artifacts** as your verification surface — Resolved Spec, Test Doc, Traceability Matrix, Completion Doc — so you confirm the work from docs, not raw code.
+- **5 artifacts** as your verification surface — Resolved Spec, Test Doc, Traceability Matrix, Review Doc, Completion Doc — so you confirm the work from docs, not raw code.
+- **Bundled agents** — `gap-hunter` (parallel gap analysis), `code-reviewer` (review loop), `spec-verifier` (adversarial verification).
 - **Project-agnostic** — detects the test runner, whether a UI exists, and Playwright; adapts accordingly.
 
 ## Install
@@ -30,8 +32,13 @@ Then run `/spec-to-code` (or hand Claude a spec and ask it to implement it prope
 .claude-plugin/marketplace.json      marketplace manifest
 plugins/spec-to-code/
 ├── .claude-plugin/plugin.json       plugin manifest
+├── commands/spec-to-code.md         /spec-to-code entry point
+├── agents/
+│   ├── gap-hunter.md                parallel gap analysis (read-only)
+│   ├── code-reviewer.md             review-loop reviewer (read-only)
+│   └── spec-verifier.md             adversarial verification (read-only)
 └── skills/spec-to-code/
     ├── SKILL.md                     the flow (spine)
-    ├── references/                  gap taxonomy · verification stack · doc templates
-    └── scripts/verify-workflow.js   Phase-10 comprehensive-verification workflow
+    ├── references/                  ingestion · gap taxonomy · verification stack · doc templates
+    └── scripts/verify-workflow.js   Phase-11 comprehensive-verification workflow
 ```

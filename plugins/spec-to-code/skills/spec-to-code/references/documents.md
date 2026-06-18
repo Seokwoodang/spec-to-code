@@ -1,6 +1,6 @@
 # Artifacts — templates & guidance
 
-Four documents are the user's verification surface. They let the user confirm the work without reading all the code: A + D(plan) at Gate 1, and C + D(report) + B + screenshots at Gate 2. Write them in the user's working language. Store under the doc home chosen in Phase 1 (default `docs/spec-to-code/<feature-slug>/`).
+Five documents are the user's verification surface. They let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, and C + D(report) + B + E at Gate 2. Write them in the user's working language. Store under the doc home chosen in Phase 1 (default `docs/spec-to-code/<feature-slug>/`).
 
 Files:
 ```
@@ -8,7 +8,8 @@ docs/spec-to-code/<slug>/
 ├── A-resolved-spec.md
 ├── B-traceability.md
 ├── C-completion.md
-└── D-test-doc.md      (Plan section first; Report section appended in P10)
+├── D-test-doc.md      (Plan section first; Report section appended in P11)
+└── E-review.md        (one section per review round)
 ```
 
 ---
@@ -82,6 +83,36 @@ Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be
 
 ---
 
+## E — Review Doc
+The record of the Phase-10 review loop: findings from the `code-reviewer` agent, the user's disposition per finding, and the fixes applied — one section per round. This is what the user reads to drive "review → comment → re-review → pass."
+
+```markdown
+# Review — <feature>
+
+## Round 1
+reviewer: code-reviewer   reviewed: <diff scope>
+
+| ID | Sev | Dimension | Location | Finding | Disposition |
+|----|-----|-----------|----------|---------|-------------|
+| R1-1 | blocker | correctness | cart.ts:42 | total ignores discount | accept → fix |
+| R1-2 | major | edge case | cart.ts:51 | empty cart → NaN | accept → fix |
+| R1-3 | minor | simplify | ui/Cart.tsx:20 | dup of util | reject (intentional) |
+
+fixes applied: R1-1, R1-2.
+verdict: 1 round more needed (re-verify R1-1/R1-2).
+
+## Round 2
+| ID | Sev | ... | Disposition |
+|----|-----|-----|-------------|
+| R1-1 | — | | ✅ resolved |
+| R1-2 | — | | ✅ resolved |
+
+verdict: no open blocker/major; user signed off → loop passes.
+```
+Disposition is the user's call per finding: `accept → fix` / `reject (<reason>)` / `defer (<where>)`. The loop passes only when no open `blocker`/`major` remain **and** the user signs off. Carry ids across rounds; mark resolved rather than deleting, so the loop history is visible.
+
+---
+
 ## C — Completion Doc
 The post-code report for Gate 2. Lets the user judge "built right" from docs + screenshots.
 
@@ -106,6 +137,9 @@ date: <>   status: awaiting Gate-2 approval
 
 ## Test results
 <paste D Report summary: N/M passing, coverage>
+
+## Review loop
+<rounds run; open findings remaining (should be none blocking); link to E>
 
 ## Screenshots (appearance baselines — need your bless)
 - <state>: <path/embed>

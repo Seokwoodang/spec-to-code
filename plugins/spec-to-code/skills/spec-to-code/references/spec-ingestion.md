@@ -28,6 +28,8 @@ Never assume `.md`. Ask only if the input is genuinely unidentifiable.
 
 Produce a single **working spec**: the requirements as analyzable text, section by section, with a pointer back to each source. This is the input to gap analysis (Phase 2) — not a rewrite the user must approve (that is the Resolved Spec, Artifact A, which comes after gaps are resolved).
 
+**Persist it.** Save the normalized working spec to `docs/spec-to-code/<slug>/working-spec.md`, with a header recording the original source(s) (file paths / URLs / "pasted on first run"). This snapshot is the stable thing a later **update** diffs the revised spec against — the user's original file may move, be edited in place, or have been a transient paste, so relying on it for the diff is unsafe. On an update run, diff the new normalized working spec against this saved snapshot, then overwrite it (git history preserves the prior version).
+
 For **visual sources** (HTML, images, Figma), additionally capture a **visual notes** block: layout, spacing intent, component hierarchy, explicit and implied states, and any annotations. This feeds both gap analysis (e.g. "what does the error state look like?") and the UI/appearance layers later.
 
 ## Watch for

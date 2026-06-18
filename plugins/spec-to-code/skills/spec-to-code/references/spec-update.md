@@ -4,19 +4,21 @@ The main flow assumes a spec received for the first time (greenfield). But specs
 
 ## Detecting the mode (Phase 1)
 
-After ingesting the spec, check the doc home (`docs/spec-to-code/<slug>/`):
-- Prior artifacts (at least `A-resolved-spec.md`) exist → **UPDATE mode**.
+After ingesting and normalizing the new spec, list the existing slugs under `docs/spec-to-code/` and check the matching doc home (`docs/spec-to-code/<slug>/`):
+- `working-spec.md` + prior artifacts (at least `A-resolved-spec.md`) exist for this feature → **UPDATE mode**.
 - Nothing there → **FRESH mode** (the main flow).
 
-Confirm with the user which feature/slug the revision targets if ambiguous. In update mode, the prior **Traceability Matrix (B)** is the key asset — it maps every spec case to its tests, code, and screenshots, so impact analysis is a reverse lookup rather than a re-read of the whole codebase.
+**Identifying the right slug is the crux** — a revision often arrives as a differently-named file (`feature-x-v2.html`) with no obvious link to the original. Match by feature title/scope, and when ambiguous, **ask the user which feature this revises** rather than guess; a wrong match diffs against the wrong baseline and corrupts everything downstream. If a brand-new feature happens to resemble an existing slug, keep them separate.
+
+In update mode, two saved files do the heavy lifting: the **`working-spec.md` snapshot** is the baseline to diff against (the user's original file may have moved or been a transient paste), and the prior **Traceability Matrix (B)** maps every spec case to its tests, code, and screenshots, so impact analysis is a reverse lookup rather than a re-read of the whole codebase.
 
 ## The delta path
 
 ### U1 — Ingest new spec + load priors
-Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E/F. Keep the old working spec to diff against. **Re-check Artifact F**: for each open blocked/deferred item, ask whether its revisit trigger has now fired (e.g. the backend endpoint shipped, the milestone arrived). Promote any now-unblocked item into this update's scope; leave the rest parked with their triggers intact.
+Normalize the new spec (any format — `references/spec-ingestion.md`). Load prior A/B/C/D/E/F and the saved **`working-spec.md`** snapshot (the baseline to diff against). **Re-check Artifact F**: for each open blocked/deferred item, ask whether its revisit trigger has now fired (e.g. the backend endpoint shipped, the milestone arrived). Promote any now-unblocked item into this update's scope; leave the rest parked with their triggers intact.
 
 ### U2 — Spec diff
-Compare old vs new working spec and classify each requirement change. Ignore pure wording/format churn.
+Compare the saved `working-spec.md` (old) vs the newly normalized spec (new) and classify each requirement change. Ignore pure wording/format churn. After resolution, overwrite `working-spec.md` with the new normalized spec so the next update diffs against the latest.
 - **Added** — new requirement/case/state/error not present before.
 - **Modified** — a decided behavior changed (different value, different transition, different copy with behavioral meaning).
 - **Removed** — a requirement deleted.

@@ -1,7 +1,7 @@
 ---
 name: spec-to-code
 description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.5.0
+version: 0.6.0
 ---
 
 # Spec-to-Code
@@ -43,9 +43,11 @@ Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), th
 ### 1 — Ingest & probe
 **Ingest:** specs arrive in any format — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text. Detect the format and normalize it into one analyzable **working spec**, preserving a pointer to each source. For visual sources (HTML/image/Figma), also capture a **visual notes** block (layout, component hierarchy, states) for the UI layer. Lossy formats (a screenshot, a happy-path mockup) omit behavior — those omissions are gaps, fed straight to Phase 2. See `references/spec-ingestion.md`.
 
-**Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
+**Feature identity & snapshot:** establish a stable **`<slug>`** for the feature (derive from its title/name; confirm with the user). The slug names the doc home `docs/spec-to-code/<slug>/`. **Persist the normalized working spec there as `working-spec.md`**, with a header pointing to the original source file(s)/URL(s). This snapshot — not the user's original file, which stays wherever they keep it — is what a later update diffs against. Never move or edit the user's original spec; only reference it.
 
-**Mode:** check the doc home. If prior artifacts (≥ `A-resolved-spec.md`) exist for this feature, this is an **UPDATE** — switch to the delta path in `references/spec-update.md` (diff the spec, impact-analyze via Matrix B, resolve delta gaps, delta TDD, **regression**). Otherwise it is **FRESH** — continue below.
+**Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home location (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
+
+**Mode:** list existing slugs under `docs/spec-to-code/`. If one holds prior artifacts (`working-spec.md` + ≥ `A-resolved-spec.md`) for **this** feature, it is an **UPDATE** — diff the new working spec against the saved `working-spec.md` and follow `references/spec-update.md` (impact-analyze via Matrix B, resolve delta gaps, delta TDD, **regression**), then overwrite the snapshot. Otherwise it is **FRESH** — continue below. If it's ambiguous which slug a revision targets (e.g. the new spec file is named differently), **ask the user** rather than guess; a wrong match corrupts the diff.
 
 ### 2 — Gap analysis
 Enumerate everything needed for *complete* code that the working spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional). For a large/multi-section spec, fan out the *reading* with the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) — one per section, distinct lenses — else `Explore`/inline. Resolution stays interactive.

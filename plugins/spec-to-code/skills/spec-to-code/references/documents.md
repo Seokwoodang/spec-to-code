@@ -5,6 +5,7 @@ Six documents are the user's verification surface. They let the user confirm the
 Files:
 ```
 docs/spec-to-code/<slug>/
+├── working-spec.md    (normalized spec snapshot + source pointers — the diff baseline for updates)
 ├── A-resolved-spec.md
 ├── B-traceability.md
 ├── C-completion.md
@@ -12,6 +13,7 @@ docs/spec-to-code/<slug>/
 ├── E-review.md        (one section per review round)
 └── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
 ```
+`working-spec.md` is written in Phase 1 (and overwritten on each update); it is the machine-facing normalization, while A is the user-approved contract. The `<slug>` directory name is the feature's identity — how an update finds its prior run.
 
 ---
 

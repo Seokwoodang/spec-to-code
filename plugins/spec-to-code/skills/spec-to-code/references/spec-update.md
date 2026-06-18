@@ -31,10 +31,13 @@ For each change, reverse-look-up Matrix B to find the affected **A-cases → tes
 ### U4 — Delta gap analysis + Gate 1
 Added/modified requirements may introduce new gaps — run gap analysis on the delta only and resolve with the user. Then **Gate 1 (hard stop) on the delta**: present the changed decisions (updated A) + changed test plan (updated D) for approval before touching code.
 
+**Deferring a delta change ("changed in the spec, but not now"):** at this gate the user may decide a changed/added requirement should not be built yet. That decision is not a silent skip — it goes to **Artifact F** with a concrete revisit trigger (same no-silent-drop rule as the main flow), its planned test is marked skipped/pending pointing to the F id, and its Matrix-B row is marked `deferred`. **Critical:** the `working-spec.md` snapshot is still overwritten with the *new* spec (it records what the spec now says), so the deferral would be invisible to the next diff — F + the `deferred` B-row are the only record that the code lags the spec here. They are re-checked at U1 of every future update.
+
 ### U5 — Update artifacts (keep history)
 - **A**: revise the affected decisions; append a dated changelog entry (what changed, why) rather than silently overwriting — the history is audit trail.
-- **D**: add test cases for added/modified behavior; mark tests for removed requirements for deletion.
-- **B**: re-map changed rows; add rows for new cases; remove rows for deleted cases.
+- **D**: add test cases for added/modified behavior; mark tests for removed requirements for deletion; mark deferred-delta tests skipped/pending with the F reference.
+- **B**: re-map changed rows; add rows for new cases; remove rows for deleted cases; mark deferred-delta rows `deferred`.
+- **F**: append the deferred delta items (and any newly-blocked work surfaced during the update), each with its revisit trigger.
 
 ### U6 — Delta TDD
 - **Added/modified**: write/adjust tests first. For *modified* behavior, the existing test should now fail (it encodes the old behavior) — update it to the new expectation and confirm RED, then change code to GREEN.

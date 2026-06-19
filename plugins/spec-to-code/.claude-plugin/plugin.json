@@ -1,7 +1,7 @@
 {
   "name": "spec-to-code",
   "description": "A gated TDD flow that turns an incomplete or ambiguous spec into complete, verified code: find gaps, resolve them with the user before any code, then prove the result with tests, screenshots, and traceability docs.",
-  "version": "0.18.0",
+  "version": "0.19.0",
   "author": {
     "name": "Seokwoo Kang",
     "email": "swkang@parametacorp.com"

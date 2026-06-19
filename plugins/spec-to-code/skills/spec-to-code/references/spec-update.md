@@ -5,8 +5,8 @@ The main flow assumes a spec received for the first time (greenfield). But specs
 ## Detecting the mode (Phase 1)
 
 After ingesting and normalizing the new spec, list the existing slugs under `docs/spec-to-code/` and check the matching doc home (`docs/spec-to-code/<slug>/`):
-- `working-spec.md` + prior artifacts (at least `A-resolved-spec.md`) exist for this feature → **UPDATE mode**.
-- Nothing there → **FRESH mode** (the main flow).
+- A version folder with `v*/working-spec.md` (+ `v*/A-resolved-spec.md`) exists for this feature → **UPDATE mode**. Create the next `v(N+1)/`; diff against the **latest `vN/working-spec.md`**.
+- Nothing there → **FRESH mode** (`v1/`).
 
 **Identifying the right slug is the crux** — a revision often arrives as a differently-named file (`feature-x-v2.html`) with no obvious link to the original. Match by feature title/scope, and when ambiguous, **ask the user which feature this revises** rather than guess; a wrong match diffs against the wrong baseline and corrupts everything downstream. If a brand-new feature happens to resemble an existing slug, keep them separate.
 
@@ -18,7 +18,7 @@ In update mode, two saved files do the heavy lifting: the **`working-spec.md` sn
 Normalize the new spec (any format — `references/spec-ingestion.md`) and **archive its original verbatim** into `source/<date>-original.<ext>` alongside the prior run's original. Load prior A/B/C/D/E/F and the saved **`working-spec.md`** snapshot (the baseline to diff against; if the prior and new originals share a format, an original-vs-original glance is a useful cross-check, but the authoritative diff is on the normalized working spec). **Surface Artifact F to the user** (the proactive resume check from Phase 1): present every open blocked/deferred item and ask which to take on now — flag those whose revisit trigger has plausibly fired (backend shipped, milestone arrived). Promote the chosen items into this update's scope; leave the rest parked with their triggers intact. This is an active prompt, not a silent re-check — a "not now" from a prior run is always put back to the user.
 
 ### U2 — Spec diff
-Compare the saved `working-spec.md` (old) vs the newly normalized spec (new) and classify each requirement change. Ignore pure wording/format churn. After resolution, overwrite `working-spec.md` with the new normalized spec so the next update diffs against the latest.
+Compare the latest `vN/working-spec.md` (old) vs the newly normalized spec (new) and classify each requirement change. Ignore pure wording/format churn. Save the new normalized spec as `v(N+1)/working-spec.md` (the old version folder is left intact — full history per version); the next update diffs against this latest one.
 - **Added** — new requirement/case/state/error not present before.
 - **Modified** — a decided behavior changed (different value, different transition, different copy with behavioral meaning).
 - **Removed** — a requirement deleted.

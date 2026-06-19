@@ -10,22 +10,26 @@ Six documents (A–F) are the user's verification surface — they let the user 
 - **Screenshots** — Playwright baselines live where the test framework puts them (alongside the e2e tests, in its `*-snapshots/` dirs) and are committed to the repo; **C links to them**, images are not copied into the doc home.
 - **Code & tests** — go in the **project's own conventional locations** (detected in Phase 1), never the doc home. The doc home holds documents only.
 
-Files (doc home):
+Files (doc home) — **versioned by spec version**:
 ```
 docs/spec-to-code/<slug>/
-├── source/            verbatim archive of each run's original spec (<date>-original.<ext>)
-├── index.md           overview/manifest — links every artifact + run history (mode, dates, status)
-├── working-spec.md    normalized spec snapshot + source pointers — the diff baseline for updates
-├── CHANGELOG.md       per-run change record — spec diff, impact, task checklist, regression, deferrals
-├── A-resolved-spec.md
-├── DESIGN.md          ← the complete dev doc (Phase 5): files, functions, every behavior
-├── B-traceability.md
-├── C-completion.md
-├── D-test-doc.md      (Plan section first; Report section appended in P11)
-├── E-review.md        (ALL review rounds kept — never overwritten)
-├── VERIFY.md          ← comprehensive-verification report (Phase 11)
-└── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
+├── index.md           COMMON: status + version list + link to latest
+├── CHANGELOG.md       COMMON: run log across all versions
+├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
+├── F-deferred.md      COMMON: parking lot (carries across versions, living)
+├── v1/                fresh run's full artifact set
+│   ├── working-spec.md   normalized snapshot — the diff baseline for the NEXT version
+│   ├── A-resolved-spec.md
+│   ├── DESIGN.md         the complete dev doc (Phase 5): files, functions, every behavior
+│   ├── B-traceability.md
+│   ├── D-test-doc.md     (Plan first; Report appended in P11)
+│   ├── E-review.md       (ALL review rounds kept — never overwritten)
+│   ├── VERIFY.md         comprehensive-verification report (Phase 11)
+│   └── C-completion.md
+└── v2/                update run's full artifact set (delta applied)   ← created per update
+    └── …
 ```
+**Version = run.** Fresh → `v1`. Each update → next `v(N+1)/` (count existing `v*` dirs). The version folder holds the complete per-run doc set so every spec version's docs are preserved whole (browsable, comparable — not only in git). **Common** files live at the slug root and accumulate across versions: `index.md` (points to latest + lists versions), `CHANGELOG.md`, `source/`, `F-deferred.md`. An update diffs the new spec against the **latest** `vN/working-spec.md`.
 
 ## Gates are document-driven (read this)
 **Every hard stop hands the user a Markdown file, not a chat summary.** At each gate: (1) produce/update the artifact MD(s) for that gate in the doc home; (2) tell the user the **exact path(s)**; (3) ask them to **read the file and approve, or edit it directly** (their edits ARE the approved version — read them back); (4) proceed only after approval. Chat Q&A is only for *gap resolution* (Phase 3 questions) — every *gate approval* is on a file the user can open, diff, and edit. Approved files persist in the doc home; **review rounds and any re-approved versions are all kept, never overwritten** (git history + per-round sections are the trail).

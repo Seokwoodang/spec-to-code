@@ -52,6 +52,14 @@ Selection: default is **checkpoint**. The user can request step-through ("꼼꼼
 
 **Why not stop at every phase:** too many hard stops breed rubber-stamping — the user clicks through without reading and the gate becomes approval theater (false confidence, worse than fewer real gates). Stops live where the user's judgment changes the outcome and a wrong call is expensive to undo.
 
+## Gates are document-driven (not chat)
+**Every hard stop hands the user a Markdown file at a known path — never a chat-summary table.** At each gate:
+1. **Produce/update the gate's artifact MD** in the doc home (e.g. `DESIGN.md` at the design gate, `D-test-doc.md` at the tests gate, `E-review.md` round at the review loop, `VERIFY.md` after comprehensive verify).
+2. **Tell the user the exact path** and ask them to **read it and approve, or edit the file directly** — their edits ARE the approved version; read them back.
+3. **Proceed only after approval.** Re-edits produce a new version/round; **all versions are kept, never overwritten** (per-round sections + git history).
+
+Chat Q&A (incl. `AskUserQuestion`) is for **gap resolution only** (Phase 3). Every **gate approval is on a file** the user can open, diff, and edit. This is non-negotiable: surfacing decisions as chat tables instead of approvable files defeats the flow.
+
 ## Phase detail
 
 ### 1 — Ingest & probe
@@ -79,10 +87,10 @@ Group gaps into a few decision questions and put them to the user (`AskUserQuest
 Present A + D; get explicit approval before any code. **Only after the user approves**, set `gateApproved: true` in `.spec-to-code-state.json` — this is what unblocks code/test edits (the gate guard enforces it). If a decision changes, update A + D and re-present.
 
 ### 5 — Design · 🟠
-Design the **logic/UI split** (a stated goal): pure logic isolated from rendering so logic is unit-testable and UI is thin. Draft **Artifact B (Traceability Matrix)**: one row per spec case → planned test(s) → target code unit → status (`TODO`). (Step-through: stop and present the design here; checkpoint: folded into the Tests gate at phase 6.)
+Write **`DESIGN.md` — the complete dev doc**: approach, the logic/UI split, **every file with its path**, data models/types, **the full function list with signatures + behavior**, an exhaustive **behavior spec** (every interaction — e.g. button-click branch by branch — every state, transition, edge, and error path), and integration points. A developer must be able to build from this alone. Also draft **Artifact B (Traceability Matrix)** (`TODO` rows). **Hand over the path** (`docs/spec-to-code/<slug>/DESIGN.md`) and have the user read/edit/approve the file. (Step-through: approve DESIGN here on its own; checkpoint: approved together with the RED tests at the Tests gate.)
 
 ### 6 — Tests first (RED) · 🔴 Tests gate
-Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3. **Hard stop (both modes):** present the design (from 5) **and** the RED tests to the user and get approval *before writing any implementation* — the tests are the executable spec, so approving them largely determines the code. (In step-through, phase 5's design is also shown on its own first.)
+Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3. Record them in **`D-test-doc.md`** (Plan section). **Hard stop (both modes):** hand over the paths — `DESIGN.md` (if not yet approved) **and** `D-test-doc.md` — and have the user read/edit/**approve the files** *before writing any implementation*. The tests are the executable spec, so approving them largely determines the code.
 
 ### 7–8 — Implement to GREEN
 Logic until logic tests pass; then thin UI over the tested logic until UI-behavior tests pass. Keep the split intact. (Step-through: stop after each to show the code; checkpoint: surfaced together at the Review loop.)
@@ -91,30 +99,32 @@ Logic until logic tests pass; then thin UI over the tested logic until UI-behavi
 For UIs, run the app and capture Playwright screenshots per state — *baseline candidates* the user blesses at Gate 2, then guarded by `toHaveScreenshot()`. Baselines live where Playwright stores them (its `*-snapshots/` dirs beside the e2e tests) and are committed; C links to them. See `references/verification.md`.
 
 ### 10 — 🔁 Review loop (iterative gate)
-Run an AI code review over the diff with the bundled **`code-reviewer`** agent (`subagent_type: 'code-reviewer'`): spec-faithfulness (vs Artifact A) + correctness/bugs, edge cases, security, simplification/reuse, convention adherence, logic/UI separation. Write findings to **Artifact E (Review Doc)**. Then loop **with the user**:
-1. Present E. The user discusses each finding — accept / reject (with reason) / defer.
+Run an AI code review over the diff with the bundled **`code-reviewer`** agent (`subagent_type: 'code-reviewer'`): spec-faithfulness (vs Artifact A) + correctness/bugs, edge cases, security, simplification/reuse, convention adherence, logic/UI separation. Then loop **with the user, document-driven**:
+1. Write the round's findings (red→green flags, each with location + evidence) as a **new round section in `E-review.md`** and **hand over the path**. The user reads the file and marks each finding accept / reject / defer **in/on the doc** (or tells you).
 2. Apply accepted fixes.
-3. Re-review the updated diff → new round in E (reuse ids; mark resolved).
-4. Repeat until no open `blocker`/`major` findings **and** the user signs off.
+3. Re-review the updated diff → **append a new round** to `E-review.md` (reuse ids; mark resolved). **Never overwrite prior rounds — all are kept.**
+4. Repeat until no open `blocker`/`major` findings **and** the user approves the latest review doc.
 
 Do not proceed to Phase 11 until the loop passes. This is the user's "review → comment → re-review → pass → next" checkpoint. **This is a 🔴 hard stop in both modes and is NEVER run solo** — presenting findings and dispositioning them yourself defeats the entire flow. The user dispositions every finding; you only produce them and apply the accepted fixes.
 
 ### 11 — Comprehensive verify
-Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline.
+Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline. Write the result to **`VERIFY.md`** and hand the user the path (this is produced only after the review loop has been approved).
 
 ### 12 — 🚪 Gate 2 (hard stop)
 Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Review Doc)** + **F (Deferred & Blocked)** + screenshots, and report. The user reviews docs, not raw code. Surface the open F items (what's parked + revisit triggers) and any residual assumptions explicitly. Wait for approval. Never commit unless explicitly told. On completion (or if the user abandons the run), set `active: false` in `.spec-to-code-state.json` so the gate guard goes dormant.
 
-## The six artifacts
+## The artifacts (each gate hands one over)
 
-| | Doc | Purpose | Written |
-|--|-----|---------|---------|
-| A | Resolved Spec | every decision/case/edge/error pinned down | P3 |
-| D | Test Doc | Plan (case list) → Report (results, coverage) | Plan P3 · Report P11 |
-| B | Traceability Matrix | spec ↔ test ↔ code ↔ pass — coverage proof | P5 draft → P11 fill |
-| E | Review Doc | code-review findings, per round, with dispositions | P10 |
-| F | Deferred & Blocked | parking lot — blocked/deferred/out-of-scope, with revisit triggers | any phase (living) |
-| C | Completion Doc | summary, decisions, how-to-run/verify, screenshots, residual gaps | P11–12 |
+| Doc | Purpose | Written | Approved at |
+|-----|---------|---------|-------------|
+| A · Resolved Spec | every decision/case/edge/error pinned down | P3 | Gate 1 |
+| **DESIGN** | complete dev doc — files, functions, every behavior | P5 | Tests gate |
+| D · Test Doc | Plan (case list) → Report (results, coverage) | Plan P6 · Report P11 | Tests gate |
+| B · Traceability Matrix | spec ↔ test ↔ code ↔ pass — coverage proof | P5 draft → P11 fill | — |
+| E · Review Doc | code-review findings, **all rounds kept**, user dispositions | P10 | Review loop |
+| **VERIFY** | comprehensive-verification report | P11 | (read before Gate 2) |
+| C · Completion Doc | summary, decisions, how-to-run, screenshots, residual | P11–12 | Gate 2 |
+| F · Deferred & Blocked | parking lot — blocked/deferred/out-of-scope + triggers | any phase (living) | — |
 
 Full templates: `references/documents.md`. Write artifacts in the user's working language. Matrix B is the spine of "did you do it right" — an empty cell is an admission, never hide one.
 

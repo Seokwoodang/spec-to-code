@@ -18,12 +18,17 @@ docs/spec-to-code/<slug>/
 ├── working-spec.md    normalized spec snapshot + source pointers — the diff baseline for updates
 ├── CHANGELOG.md       per-run change record — spec diff, impact, task checklist, regression, deferrals
 ├── A-resolved-spec.md
+├── DESIGN.md          ← the complete dev doc (Phase 5): files, functions, every behavior
 ├── B-traceability.md
 ├── C-completion.md
 ├── D-test-doc.md      (Plan section first; Report section appended in P11)
-├── E-review.md        (one section per review round)
+├── E-review.md        (ALL review rounds kept — never overwritten)
+├── VERIFY.md          ← comprehensive-verification report (Phase 11)
 └── F-deferred.md      (parking lot — blocked / deferred / out-of-scope, living doc)
 ```
+
+## Gates are document-driven (read this)
+**Every hard stop hands the user a Markdown file, not a chat summary.** At each gate: (1) produce/update the artifact MD(s) for that gate in the doc home; (2) tell the user the **exact path(s)**; (3) ask them to **read the file and approve, or edit it directly** (their edits ARE the approved version — read them back); (4) proceed only after approval. Chat Q&A is only for *gap resolution* (Phase 3 questions) — every *gate approval* is on a file the user can open, diff, and edit. Approved files persist in the doc home; **review rounds and any re-approved versions are all kept, never overwritten** (git history + per-round sections are the trail).
 `working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while A is the user-approved contract. `CHANGELOG.md` is the running record of *what each run set out to do and did* (one entry per fresh/update run); `index.md` is the one-screen pointer to everything.
 
 ---
@@ -106,6 +111,50 @@ Each becomes ≥1 test in D. Format as given/when/then.
 ```
 
 ---
+
+## DESIGN — the complete dev doc (Phase 5)
+The exhaustive design the user approves **before any tests or code**. It must carry *everything needed to build*: a reader should be able to implement from this alone. Hand over the path; the user reads/edits/approves the file.
+
+```markdown
+# Design — <feature>
+slug: <slug>   from: A-resolved-spec.md   status: draft | approved <date>
+
+## 1. Approach & architecture
+- <overview in 2–4 sentences>
+- Layer split: logic (<where>) vs UI (<where>) — what lives in each and why.
+
+## 2. Files (every file to create/modify, with path)
+| Path | New/Modify | Purpose |
+|------|-----------|---------|
+| src/lib/cart/coupon.ts | new | discount engine (pure) |
+| src/components/CouponInput.tsx | new | UI: input + apply button |
+| ... | | |
+
+## 3. Data models / types
+```
+type Coupon = { id: string; type: 'fixed'|'percent'; value: number; ... }
+type ApplyResult = { discount: number; final: number; ... }
+```
+
+## 4. Functions / API (each: signature, params, returns, behavior)
+- `applyCoupons(cartTotal, coupons[], wallet?) -> ApplyResult`
+  - params: ...   returns: ...   behavior: step by step ...
+- `<component>` props/state/handlers ...
+
+## 5. Behavior spec (every interaction & state — be exhaustive)
+- **Apply button click**: validate input → call X → on success Y → on error Z (each branch).
+- **States**: empty / loading / applied / error / disabled — what shows, what's enabled.
+- **Transitions**: double-click, re-apply, remove, refresh — exact behavior.
+- **Edge cases**: (enumerate, tie each to an A-case)
+- **Errors**: each failure path → user-visible result.
+
+## 6. Dependencies / integration points
+- backend endpoints, libs, existing modules reused.
+
+## 7. Out of scope / open
+- (should be none open after Gate 1; list deferrals → F)
+```
+The detail bar: button behavior, file paths, function list, state machine, error branches — all of it. If a developer would have to guess, it's not done.
 
 ## D — Test Doc
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
@@ -203,6 +252,30 @@ Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. *
 **No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its Matrix-B row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
 
 ---
+
+## VERIFY — comprehensive verification report (Phase 11)
+Produced after the review loop passes, handed to the user before Gate 2. Reports the conformance/coverage/separation audit + full-suite result.
+
+```markdown
+# Verify — <feature>   date: <>
+
+## Suite
+- runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
+
+## Conformance (every A-case exercised & asserted)
+| A-case | test | asserted? | verdict |
+|--------|------|-----------|---------|
+| C1 | T1 | yes | ✅ |
+
+## Traceability (B) — no TODO/empty rows
+- <status; list any deferred rows>
+
+## Logic/UI separation
+- <logic free of UI imports? UI thin? findings>
+
+## Result
+- <pass — ready for Gate 2 | issues found → back to fix>
+```
 
 ## C — Completion Doc
 The post-code report for Gate 2. Lets the user judge "built right" from docs + screenshots.

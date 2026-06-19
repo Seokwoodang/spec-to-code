@@ -69,12 +69,16 @@ docs/spec-to-code/<slug>/
 ├── working-spec.md    정규화 기획서 스냅샷 (업데이트 diff 기준) + 원본 소스 포인터
 ├── CHANGELOG.md       run별 변경 기록 — spec diff·영향·할 일 체크리스트·회귀·미룬 것
 ├── A-resolved-spec.md 확정 명세
+├── DESIGN.md          완벽한 개발문서 (파일·함수·동작 전부) — Phase 5
 ├── B-traceability.md  추적 매트릭스
 ├── C-completion.md    완료 문서
 ├── D-test-doc.md      테스트 문서 (계획 → 리포트)
-├── E-review.md        리뷰 문서 (라운드별)
+├── E-review.md        리뷰 문서 (라운드 전부 보존)
+├── VERIFY.md          종합 검증 리포트 — Phase 11
 └── F-deferred.md      미결/보류 parking lot
 ```
+
+> **게이트는 문서 기반입니다.** 각 하드스톱마다 위 MD 파일을 만들어 **경로를 알려주고, 당신이 파일을 열어 읽고 승인하거나 직접 수정**합니다 (수정본이 곧 승인본). 채팅 표가 아니라 **열고·diff하고·고칠 수 있는 파일** 로 승인합니다. 리뷰 라운드 등 모든 버전은 보존됩니다.
 
 - **코드·테스트**: doc home이 아니라 **프로젝트 자체 컨벤션 위치**에 (Phase 1에서 감지).
 - **스크린샷·baseline**: Playwright가 두는 곳(e2e 테스트 옆 `*-snapshots/`)에 저장·커밋되고, 완료 문서(C)가 링크로 참조.

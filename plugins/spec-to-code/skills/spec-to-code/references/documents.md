@@ -202,8 +202,8 @@ Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be
 
 ---
 
-## E — Review Doc
-The record of the Phase-10 review loop. Write it like a **real PR review** (the bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, and the concrete fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. One section per round; **all rounds kept**.
+## E — Review (per-round files, `v<N>/review/r<k>.md`)
+The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `review/r1.md`, `review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
 
 ```markdown
 # Review — <feature>

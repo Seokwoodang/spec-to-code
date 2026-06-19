@@ -21,22 +21,36 @@ any-format spec → [normalize] → [find gaps] → [resolve w/ user] → resolv
 
 ## Flow at a glance
 
-| # | Phase | Output | Stop? |
-|---|-------|--------|-------|
+Stop legend: 🔴 = hard stop in **both** modes · 🟠/🟡 = additional stop in **step-through** only · — = never stop (show output, continue).
+
+| # | Phase | Output | Stop |
+|---|-------|--------|------|
 | 1 | Ingest & probe | normalized working spec + env facts (runner, UI?, Playwright?) | — |
 | 2 | Gap analysis | gap list (exhaustive) | — |
-| 3 | Gap resolution | **A. Resolved Spec** + **D. Test Plan** | — |
-| 4 | **🚪 Gate 1** | user approves A + D | **HARD STOP** |
-| 5 | Design | layer split (logic / UI) + **B. Traceability Matrix** (draft) | — |
-| 6 | Tests first | logic unit tests + UI behavior tests — **RED** | — |
-| 7 | Implement logic | logic tests **GREEN** | — |
-| 8 | Implement UI | UI behavior tests **GREEN** | — |
-| 9 | Visual verify | Playwright screenshots → baseline candidates | — |
-| 10 | **🔁 Review loop** | **E. Review Doc**; review → user → fix → re-review until pass | **GATE (iterative)** |
+| 3 | Gap resolution | **A. Resolved Spec** + **D. Test Plan** | → 4 |
+| 4 | **🚪 Gate 1** | user approves A + D | 🔴 |
+| 5 | Design | layer split (logic / UI) + **B. Traceability Matrix** (draft) | 🟠 |
+| 6 | Tests first | logic unit tests + UI behavior tests — **RED** | 🔴 |
+| 7 | Implement logic | logic tests **GREEN** | 🟡 |
+| 8 | Implement UI | UI behavior tests **GREEN** | 🟡 |
+| 9 | Visual verify | Playwright screenshots → baseline candidates | 🟠 |
+| 10 | **🔁 Review loop** | **E. Review Doc**; review → user → fix → re-review until pass | 🔴 |
 | 11 | Comprehensive verify | fill **B**; spec-conformance + full suite + separation audit | — |
-| 12 | **🚪 Gate 2** | report **C** + **D**(report) + **B** + **E** + **F** + screenshots; user approves | **HARD STOP** |
+| 12 | **🚪 Gate 2** | report **C** + **D**(report) + **B** + **E** + **F** + screenshots | 🔴 |
 
-Three human checkpoints: Gate 1 (*pre-code* — "building the right thing?"), the Review loop (*iterative* — quality/bugs cleaned with the user), Gate 2 (*post-code* — "built it right?"). Everything else flows.
+## Checkpoint modes
+Two modes control *how often* the flow stops for the user. Both **never** stop on the low-value mechanical phases (1, 2, 11 — show output and continue) and both run the **Review loop (10) WITH the user** (it is never run solo).
+
+- **checkpoint (default)** — stops at the **4 🔴 phases only**; each stop also surfaces the preceding 🟠/🟡 work, folded in:
+  1. **Gate 1** (phase 4) — resolved spec + test plan ("building the right thing?")
+  2. **Tests gate** (phase 6) — surfaces the design (5) **and** the RED tests together; approved *before any implementation* ("how, and how it's verified?")
+  3. **Review loop** (phase 10) — surfaces the implemented code (7–9, + screenshots if UI) and runs the review *with the user*
+  4. **Gate 2** (phase 12) — final completion
+- **step-through** — additionally stops at **5, 7, 8, 9** on their own (so: 4, 5, 6, 7, 8, 9, 10, 12). Maximum control, more stops. Still skips 1/2/11.
+
+Selection: default is **checkpoint**. The user can request step-through ("꼼꼼히 가자 / 단계별로 / step through") at the start or mid-run. Phases marked 🟠/🟡 are *shown* in checkpoint mode (folded into the next gate) and *stopped on* in step-through.
+
+**Why not stop at every phase:** too many hard stops breed rubber-stamping — the user clicks through without reading and the gate becomes approval theater (false confidence, worse than fewer real gates). Stops live where the user's judgment changes the outcome and a wrong call is expensive to undo.
 
 ## Phase detail
 
@@ -64,14 +78,14 @@ Group gaps into a few decision questions and put them to the user (`AskUserQuest
 ### 4 — 🚪 Gate 1 (hard stop)
 Present A + D; get explicit approval before any code. **Only after the user approves**, set `gateApproved: true` in `.spec-to-code-state.json` — this is what unblocks code/test edits (the gate guard enforces it). If a decision changes, update A + D and re-present.
 
-### 5 — Design
-Design the **logic/UI split** (a stated goal): pure logic isolated from rendering so logic is unit-testable and UI is thin. Draft **Artifact B (Traceability Matrix)**: one row per spec case → planned test(s) → target code unit → status (`TODO`).
+### 5 — Design · 🟠
+Design the **logic/UI split** (a stated goal): pure logic isolated from rendering so logic is unit-testable and UI is thin. Draft **Artifact B (Traceability Matrix)**: one row per spec case → planned test(s) → target code unit → status (`TODO`). (Step-through: stop and present the design here; checkpoint: folded into the Tests gate at phase 6.)
 
-### 6 — Tests first (RED)
-Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3.
+### 6 — Tests first (RED) · 🔴 Tests gate
+Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3. **Hard stop (both modes):** present the design (from 5) **and** the RED tests to the user and get approval *before writing any implementation* — the tests are the executable spec, so approving them largely determines the code. (In step-through, phase 5's design is also shown on its own first.)
 
 ### 7–8 — Implement to GREEN
-Logic until logic tests pass; then thin UI over the tested logic until UI-behavior tests pass. Keep the split intact.
+Logic until logic tests pass; then thin UI over the tested logic until UI-behavior tests pass. Keep the split intact. (Step-through: stop after each to show the code; checkpoint: surfaced together at the Review loop.)
 
 ### 9 — Visual verify
 For UIs, run the app and capture Playwright screenshots per state — *baseline candidates* the user blesses at Gate 2, then guarded by `toHaveScreenshot()`. Baselines live where Playwright stores them (its `*-snapshots/` dirs beside the e2e tests) and are committed; C links to them. See `references/verification.md`.
@@ -83,7 +97,7 @@ Run an AI code review over the diff with the bundled **`code-reviewer`** agent (
 3. Re-review the updated diff → new round in E (reuse ids; mark resolved).
 4. Repeat until no open `blocker`/`major` findings **and** the user signs off.
 
-Do not proceed to Phase 11 until the loop passes. This is the user's "review → comment → re-review → pass → next" checkpoint.
+Do not proceed to Phase 11 until the loop passes. This is the user's "review → comment → re-review → pass → next" checkpoint. **This is a 🔴 hard stop in both modes and is NEVER run solo** — presenting findings and dispositioning them yourself defeats the entire flow. The user dispositions every finding; you only produce them and apply the accepted fixes.
 
 ### 11 — Comprehensive verify
 Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline.

@@ -7,7 +7,9 @@ Run the **spec-to-code** flow on the spec below (or at the path) — see the `sp
 
 Spec / target: $ARGUMENTS
 
-**Pick the tier first** (Phase 1 quick scan): for a small, low-risk change ("add one button", "tweak this") run the **lite** path (`references/lite-mode.md`) — 4 steps, 1 gate, a single CHANGELOG entry; for large/uncertain work run the **full** 12-phase flow below. Honor an explicit "lite" request unless the scan finds a blocker → escalate to full. The safety core (user-resolved gaps, test-first, regression, no unprompted commit) holds in both.
+**Pick the tier first** (Phase 1 quick scan): for a small, low-risk change ("add one button", "tweak this") run the **lite** path (`references/lite-mode.md`) — 4 steps, 1 gate, a single CHANGELOG entry; for large/uncertain work run the **full** 12-phase flow below. Honor an explicit "lite" request unless the scan finds a blocker → escalate to full.
+
+**Checkpoint mode** (full tier): default **checkpoint** = 4 hard stops (Gate 1 spec+plan · design+RED tests · code+review loop · final). If the user asks "꼼꼼히/step-through", also stop at design/logic/UI/visual individually. NEVER run the review loop solo — the user dispositions every finding. The safety core (user-resolved gaps, test-first, regression, no unprompted commit) holds throughout.
 
 Follow the flow exactly:
 

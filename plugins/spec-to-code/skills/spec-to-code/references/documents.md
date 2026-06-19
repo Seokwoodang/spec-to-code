@@ -117,7 +117,7 @@ Each becomes ≥1 test in D. Format as given/when/then.
 ---
 
 ## 03-design.md — the complete dev doc (Phase 5)
-The exhaustive design the user approves **before any tests or code**. It must carry *everything needed to build*: a reader should be able to implement from this alone. Hand over the path; the user reads/edits/approves the file.
+The exhaustive design the user approves **before any tests or code**. It must carry *everything needed to build*: a reader should be able to implement from this alone. Hand over the path; the user reads/edits/approves the file. *If a built HTML/mockup was the input, §2 also states how its markup/CSS decomposes into components (reuse, don't re-create) and where behavior/state/API attach.*
 
 ```markdown
 # Design — <feature>

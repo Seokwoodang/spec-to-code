@@ -21,6 +21,8 @@
 
 > 업데이트가 나오면 `/plugin` 메뉴에서 받을 수 있습니다.
 
+📖 **실제 런 예시(처음부터 끝까지)**: [`plugins/spec-to-code/examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드까지의 전 과정.
+
 ---
 
 ## 사용법

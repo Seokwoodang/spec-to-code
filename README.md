@@ -117,6 +117,35 @@ docs/spec-to-code/<slug>/
 
 ## 동작 방식
 
+### 한눈에 (flow)
+
+```mermaid
+flowchart TD
+  S([기획서 · 어떤 포맷이든]) --> P1[1 · Ingest &amp; probe<br/>정규화 · 버전폴더 · 모드/tier 판정]
+  P1 --> P2[2 · 갭 분석]
+  P2 --> P3[3 · 갭 해소 → 02-resolved-spec]
+  P3 --> G1{{🚪 Gate 1 · resolved-spec 승인}}
+  G1 --> P5[5 · 설계 → 03-design]
+  P5 --> P6[6 · 테스트 먼저 RED → 04-test-doc]
+  P6 --> G2{{🚪 Tests gate · design+tests 승인}}
+  G2 --> P7[7·8 · 구현 → GREEN]
+  P7 --> P9[9 · 시각 검증]
+  P9 --> R[10 · 독립 리뷰어 → 06-review/rN]
+  R --> G3{{🔁 사용자 처분}}
+  G3 -->|open 남으면 재리뷰| R
+  G3 --> P11[11 · 종합 검증 → 07-verify]
+  P11 --> G4{{🚪 Gate 2 · completion 승인}}
+  G4 --> DONE([✅ 완료])
+
+  G1 -.보류.-> F[(deferred.md · TODO)]
+  G3 -.보류.-> F
+
+  classDef gate fill:#1f6feb,color:#fff,stroke:#1f6feb;
+  class G1,G2,G3,G4 gate;
+```
+
+> 🚪 = 하드스톱(문서 핸드오프 후 승인). design 승인 전 코드·테스트는 훅이 차단. 보류 항목은 `deferred.md`(TODO)로 — 다음 재개 때 먼저 물어봄. **fresh → `v1/`, 업데이트 → `v2/`** (직전 working-spec와 diff + 회귀).
+
 ### 12 페이즈 플로우
 
 | # | 페이즈 | 산출 | 정지 |

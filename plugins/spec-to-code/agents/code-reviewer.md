@@ -26,15 +26,17 @@ By default review the diff for this feature (unstaged/branch changes via `git di
 
 Report only findings you are genuinely confident matter. Each must be a real, actionable issue — not style nitpicking or speculation. False positives erode the loop's value. When uncertain, either verify by reading more, or omit.
 
-## Output (structured)
+## Output — write it like a real PR review
 
-Return findings, each with:
-- `id` (stable across rounds, e.g. R1-3)
-- `severity` — `blocker` (must fix before proceeding) / `major` (should fix) / `minor` (optional)
-- `dimension` (from the list above)
-- `location` — file:line
-- `finding` — what is wrong, concretely
-- `rationale` — why it matters
-- `suggestedFix` — the change you would make (describe; do not apply it)
+Match the bar of GitHub's `@claude review`: a reviewer should be able to act on it without opening the file. **Group by severity**, and for **every** finding include:
+- `id` (stable across rounds, e.g. R1)
+- severity: **🔴 critical/blocker** (must fix) · **🟡 major/minor** (should/optional)
+- **exact `file:line`**
+- the **offending code snippet, quoted** (a few real lines from the file — not a paraphrase)
+- **why it's wrong, concretely** — what breaks, under what input/condition
+- the **fix as a code block** (the actual change, ready to apply — but you do NOT apply it)
+- a **disposition placeholder** the user fills: `☐ fix  ☐ defer(F)  ☐ reject`
 
-Do **not** edit files — propose fixes only. The human reviews your findings, decides accept/reject/defer per finding, the main loop applies the accepted ones, and you re-review in the next round. On a re-review, reuse prior ids for unresolved items and mark fixed ones as resolved. End with a one-line verdict: are there any open `blocker`/`major` findings, or is the diff clean enough to pass the loop?
+Then a **✅ what's good** section (genuine — correct patterns, solid migrations/types/guards) and a **one-line summary** (what's critical vs recommended).
+
+Do **not** edit files — propose fixes only. The human dispositions each finding; the main loop applies the accepted ones; you re-review next round (reuse ids, mark resolved, never overwrite prior rounds). End with the verdict: any open critical/major, or clean enough to pass?

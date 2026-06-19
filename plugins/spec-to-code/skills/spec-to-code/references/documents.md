@@ -199,32 +199,44 @@ Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be
 ---
 
 ## E — Review Doc
-The record of the Phase-10 review loop: findings from the `code-reviewer` agent, the user's disposition per finding, and the fixes applied — one section per round. This is what the user reads to drive "review → comment → re-review → pass."
+The record of the Phase-10 review loop. Write it like a **real PR review** (the bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, and the concrete fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. One section per round; **all rounds kept**.
 
 ```markdown
 # Review — <feature>
 
 ## Round 1
-reviewer: code-reviewer   reviewed: <diff scope>
+reviewer: code-reviewer   scope: <files reviewed>   suite: <N/M green>
 
-| ID | Sev | Dimension | Location | Finding | Disposition |
-|----|-----|-----------|----------|---------|-------------|
-| R1-1 | blocker | correctness | cart.ts:42 | total ignores discount | accept → fix |
-| R1-2 | major | edge case | cart.ts:51 | empty cart → NaN | accept → fix |
-| R1-3 | minor | simplify | ui/Cart.tsx:20 | dup of util | reject (intentional) |
+전반적으로 <1–2문장 총평>.
 
-fixes applied: R1-1, R1-2.
-verdict: 1 round more needed (re-verify R1-1/R1-2).
+### 🔴 Critical — <title>
+**`path/to/file.ts:53-63`**
+```ts
+// the actual offending code, quoted
+await admin.from('users').update({ ... }).eq('id', id)
+return redirect('/ok')   // ← return value never checked
+```
+<why it's a bug, concretely — what breaks, when>. Fix:
+```ts
+const { error } = await admin.from('users').update({ ... }).eq('id', id)
+if (error) return redirect(error.code === '23505' ? '/err?dup' : '/err')
+```
+**disposition:** ☐ fix  ☐ defer(F)  ☐ reject
+
+### 🟡 Improvement — <title>
+**`path/file.tsx:20`** — <finding + snippet + suggested code>
+**disposition:** ☐ fix  ☐ defer(F)  ☐ reject
+
+### ✅ 잘된 점
+- <what's correctly done — migrations, types, integrity checks…>
+
+**요약:** <what must change (critical) vs recommended>.
 
 ## Round 2
-| ID | Sev | ... | Disposition |
-|----|-----|-----|-------------|
-| R1-1 | — | | ✅ resolved |
-| R1-2 | — | | ✅ resolved |
-
-verdict: no open blocker/major; user signed off → loop passes.
+(re-review after fixes — reuse ids, mark ✅ resolved; never overwrite Round 1)
 ```
-Disposition is the user's call per finding: `accept → fix` / `reject (<reason>)` / `defer (<where>)`. The loop passes only when no open `blocker`/`major` remain **and** the user signs off. Carry ids across rounds; mark resolved rather than deleting, so the loop history is visible.
+
+Each finding carries id, severity (`critical/blocker` · `major` · `minor`), `file:line`, the **code snippet**, the **fix as code**, and a **disposition the user sets** (`fix` / `defer(F)` / `reject`). The loop passes only when no open critical/major remain **and** the user approves the latest round. Produce the findings; the user dispositions — never both.
 
 ---
 

@@ -9,10 +9,10 @@ After normalizing the spec/change, run a **quick gap scan** — inline, not the 
 - The user may request lite explicitly ("가볍게 가자", "버튼 하나니까"). Honor it — **unless the scan finds a blocker or hidden complexity**, in which case escalate (below). Never take "it's small" purely at face value; the quick scan is what confirms it.
 
 ## The lite path (L1–L4)
-- **L1 — Ingest & quick scan.** Normalize the spec, archive the original (`source/`), detect mode (fresh/update), surface open `F` items, run the quick scan → decide tier. (Same Phase-1 essentials, minus the exhaustive gap fan-out.)
-- **L2 — Resolve + confirm (single gate).** Ask the few real gaps (still the user's call — no inventing). Record the decisions + a **task checklist** in a `CHANGELOG.md` entry. User confirms before any code. This one gate replaces Gate 1.
+- **L1 — Ingest & quick scan.** Normalize the spec, archive the original (`source/`), detect mode (fresh/update), surface open `F` items, run the quick scan → decide tier. Write `.spec-to-code-state.json` with `tier:"lite"`, `gateApproved:false` (the gate guard now blocks code/test edits until L2). (Same Phase-1 essentials, minus the exhaustive gap fan-out.)
+- **L2 — Resolve + confirm (single gate).** Ask the few real gaps (still the user's call — no inventing). Record the decisions + a **task checklist** in a `CHANGELOG.md` entry. User confirms before any code; **on confirm set `gateApproved:true`** (unblocks code). This one gate replaces Gate 1.
 - **L3 — Test-first + implement.** Write test(s) for the changed behavior (RED → GREEN), keep the logic/UI split. If this is an update, run the **full prior suite as a regression guard**.
-- **L4 — Quick review + done.** One inline code-review pass (loop only if it surfaces something real). Tick off the CHANGELOG tasks, record the regression result, brief report. User signs off. Commit only if told. This replaces the review loop + comprehensive verify + Gate 2.
+- **L4 — Quick review + done.** One inline code-review pass (loop only if it surfaces something real). Tick off the CHANGELOG tasks, record the regression result, brief report. User signs off; set `active:false` in the state file. Commit only if told. This replaces the review loop + comprehensive verify + Gate 2.
 
 ## Safety core — never dropped, even in lite
 - **gaps resolved by the user** (no invented behavior);

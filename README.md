@@ -150,6 +150,16 @@ docs/spec-to-code/<slug>/
 
 스킬은 에이전트가 없는 환경에서도 `Explore`/인라인으로 **graceful fallback** 됩니다.
 
+### 게이트 강제 (gate guard)
+
+게이트는 "지시" 가 아니라 **구조적으로 강제** 됩니다. 번들 PreToolUse 훅(`hooks/gate-guard.mjs`)이:
+
+- 실행 중인 작업(`.spec-to-code-state.json` 의 `active:true`)이 **Gate 미승인** 상태면 → **코드/테스트 파일 Edit/Write 차단** (doc home 문서·상태파일은 편집 허용)
+- 사용자가 Gate 1(또는 lite L2)을 승인해 `gateApproved:true` 로 바뀌어야 코드 수정 허용
+- **scoped + fail-open**: 활성 상태파일이 없으면 완전 무동작 → 다른 프로젝트의 일반 코딩엔 전혀 간섭 안 함. 훅 오류 시에도 차단이 아니라 통과.
+
+즉 "확정 명세 없이 코딩 시작" 이 **불가능** 해집니다 (skill=두뇌, hook=가드레일).
+
 ---
 
 ## 디렉토리 구조

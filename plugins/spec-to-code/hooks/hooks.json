@@ -1,0 +1,17 @@
+{
+  "description": "spec-to-code gate guard — blocks code/test edits while a run is active but its gate is unapproved. No-op unless a .spec-to-code-state.json marks an active flow.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PLUGIN_ROOT}/hooks/gate-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}

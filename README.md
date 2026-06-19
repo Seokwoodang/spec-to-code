@@ -71,47 +71,47 @@ docs/spec-to-code/<slug>/
 ├── deferred.md        [공통] 미결/보류 TODO (버전 누적)
 ├── source/            [공통] run별 원본 기획서 verbatim 아카이브
 ├── v1/                기획서 v1 산출물 세트
-│   ├── working-spec.md   정규화 스냅샷 (다음 버전 diff 기준)
-│   ├── resolved-spec.md  확정 명세 (Gate 1)
-│   ├── design.md         완벽한 개발문서 — 파일·함수·동작 전부 (Phase 5)
-│   ├── test-doc.md       테스트 계획 → 리포트
-│   ├── traceability.md   추적 매트릭스 (명세↔테스트↔코드)
-│   ├── review/r1.md…     독립 리뷰 라운드 (전부 보존)
-│   ├── verify.md         종합 검증 (Phase 11)
-│   └── completion.md     완료 보고 (Gate 2)
+│   ├── 01-working-spec.md   정규화 스냅샷 (다음 버전 diff 기준)
+│   ├── 02-resolved-spec.md  확정 명세 (Gate 1)
+│   ├── 03-design.md         완벽한 개발문서 — 파일·함수·동작 전부 (Phase 5)
+│   ├── 04-test-doc.md       테스트 계획 → 리포트
+│   ├── 05-traceability.md   추적 매트릭스 (명세↔테스트↔코드)
+│   ├── 06-review/r1.md…     독립 리뷰 라운드 (전부 보존)
+│   ├── 07-verify.md         종합 검증 (Phase 11)
+│   └── 08-completion.md     완료 보고 (Gate 2)
 └── v2/                업데이트마다 새 버전 폴더
 ```
-> 업데이트는 새 `v(N+1)/` 를 만들고 직전 `vN/working-spec.md` 와 diff. 코드·테스트는 doc home이 아니라 프로젝트 자체 위치에.
+> 업데이트는 새 `v(N+1)/` 를 만들고 직전 `vN/01-working-spec.md` 와 diff. 코드·테스트는 doc home이 아니라 프로젝트 자체 위치에.
 
 > **게이트는 문서 기반입니다.** 각 하드스톱마다 위 MD 파일을 만들어 **경로를 알려주고, 당신이 파일을 열어 읽고 승인하거나 직접 수정**합니다 (수정본이 곧 승인본). 채팅 표가 아니라 **열고·diff하고·고칠 수 있는 파일** 로 승인합니다. 리뷰 라운드 등 모든 버전은 보존됩니다.
 
 - **코드·테스트**: doc home이 아니라 **프로젝트 자체 컨벤션 위치**에 (Phase 1에서 감지).
-- **스크린샷·baseline**: Playwright가 두는 곳(e2e 테스트 옆 `*-snapshots/`)에 저장·커밋되고, completion.md 가 링크로 참조.
+- **스크린샷·baseline**: Playwright가 두는 곳(e2e 테스트 옆 `*-snapshots/`)에 저장·커밋되고, 08-completion.md 가 링크로 참조.
 
 | 체크포인트 | 받는 것 | 하는 것 |
 |---|---|---|
-| 🚪 **Gate 1** (코딩 전) | 갭 질문 + 확정 명세(resolved-spec.md) + 테스트 계획(D) | 빈 곳 답하고 → 진행 승인 |
-| 🔁 **리뷰 루프** (반복) | 리뷰 문서(review/) | finding별 accept/reject/defer → 통과 시 다음 |
-| 🚪 **Gate 2** (완료 후) | 완료 문서(completion.md) + 테스트 결과 + 스크린샷 + 미결(deferred.md) | baseline 승인 → 최종 OK |
+| 🚪 **Gate 1** (코딩 전) | 갭 질문 + 확정 명세(02-resolved-spec.md) + 테스트 계획(D) | 빈 곳 답하고 → 진행 승인 |
+| 🔁 **리뷰 루프** (반복) | 리뷰 문서(06-review/) | finding별 accept/reject/defer → 통과 시 다음 |
+| 🚪 **Gate 2** (완료 후) | 완료 문서(08-completion.md) + 테스트 결과 + 스크린샷 + 미결(deferred.md) | baseline 승인 → 최종 OK |
 
 ### 첫 개발 vs 업데이트 — 무엇이 다른가
 
 | | 🆕 첫 개발 (Fresh) | 🔄 업데이트 (Update) |
 |---|---|---|
 | **트리거** | 그 기능의 첫 `/spec-to-code` | 같은 기능에 새/수정 기획서로 다시 `/spec-to-code` (자동 감지) |
-| **시작 동작** | 기획서를 0부터 정규화 | 새 기획서 ↔ 저장된 **`working-spec.md` 스냅샷** **diff** + 이전 산출물 로드 + **막힌 항목(deferred.md) 재점검** |
+| **시작 동작** | 기획서를 0부터 정규화 | 새 기획서 ↔ 저장된 **`01-working-spec.md` 스냅샷** **diff** + 이전 산출물 로드 + **막힌 항목(deferred.md) 재점검** |
 | **갭/Gate 1** | 기능 전체의 빈 곳을 다 질문 | **바뀐 부분의 갭만** 질문 + 변경이 건드린 기존 일탈/가정 재확인 |
-| **작업 범위** | 전체 구현 | **델타만** — 영향 분석(traceability.md 역색인)으로 바뀐 케이스·테스트·코드만 손댐 |
+| **작업 범위** | 전체 구현 | **델타만** — 영향 분석(05-traceability.md 역색인)으로 바뀐 케이스·테스트·코드만 손댐 |
 | **작업 계획서** | A/D 가 곧 계획 | **`CHANGELOG.md` 의 할 일 체크리스트** — 델타 Gate 1에서 "이번 업데이트에 뭘 할지" 승인받고 완료까지 체크 |
 | **테스트** | 전 케이스 TDD (RED→GREEN) | 변경분 TDD + **전체 기존 suite 회귀 검사** (의도된 변경 외엔 다 통과해야 함) |
 | **핵심 보장** | 모든 명세 케이스 커버 | **개정이 기존 케이스를 조용히 깨뜨리지 않음** |
 
 #### 기존 기획서는 어디에 저장되고, 어떻게 "같은 기능" 인지 아는가
 
-- **저장 위치**: 첫 개발 Phase 1에서 기획서를 정규화한 **스냅샷을 `docs/spec-to-code/<기능명>/working-spec.md` 에 저장**합니다. 원본 기획서는 사용자가 두던 곳(예: `doc/` 트리, Figma, 붙여넣기)에 그대로 두고 **경로/링크만 기록** — 원본은 옮기거나 수정하지 않습니다. 업데이트 때 diff 의 기준은 이 스냅샷입니다 (원본은 이동·수정·휘발될 수 있으므로).
+- **저장 위치**: 첫 개발 Phase 1에서 기획서를 정규화한 **스냅샷을 `docs/spec-to-code/<기능명>/01-working-spec.md` 에 저장**합니다. 원본 기획서는 사용자가 두던 곳(예: `doc/` 트리, Figma, 붙여넣기)에 그대로 두고 **경로/링크만 기록** — 원본은 옮기거나 수정하지 않습니다. 업데이트 때 diff 의 기준은 이 스냅샷입니다 (원본은 이동·수정·휘발될 수 있으므로).
 - **기능 식별(slug)**: `docs/spec-to-code/<기능명>/` 의 디렉토리 이름이 곧 기능의 정체성입니다. 새 기획서를 주면 기존 slug 목록과 제목/범위로 매칭하고, **애매하면("feature-x-v2.html" 처럼 이름이 다를 때) 어느 기능의 개정인지 사용자에게 물어봅니다** — 잘못 매칭하면 엉뚱한 기준과 diff 되어 전부 틀어지기 때문.
 
-> 💡 업데이트가 제대로 돌려면 첫 개발이 이 플로우로 진행돼 `docs/spec-to-code/<기능명>/` 에 `working-spec.md` 와 산출물(특히 추적 매트릭스 traceability.md)이 남아 있어야 합니다. 이 플로우 없이 만든 기존 코드를 업데이트하려면, 먼저 기존 코드+테스트에서 working-spec·resolved-spec·traceability를 역으로 만들어두고 진행합니다.
+> 💡 업데이트가 제대로 돌려면 첫 개발이 이 플로우로 진행돼 `docs/spec-to-code/<기능명>/` 에 `01-working-spec.md` 와 산출물(특히 추적 매트릭스 05-traceability.md)이 남아 있어야 합니다. 이 플로우 없이 만든 기존 코드를 업데이트하려면, 먼저 기존 코드+테스트에서 working-spec·resolved-spec·traceability를 역으로 만들어두고 진행합니다.
 
 ---
 
@@ -123,16 +123,16 @@ docs/spec-to-code/<slug>/
 |---|--------|------|------|
 | 1 | Ingest & probe | 정규화된 working spec + 환경 탐지 (러너/UI/Playwright/모드) | — |
 | 2 | 갭 분석 | 갭 목록 (전수) | — |
-| 3 | 갭 해소 | `resolved-spec.md` (확정 명세) | — |
-| 4 | **🚪 Gate 1** | 사용자가 `resolved-spec.md` 승인 | **하드 스톱** |
-| 5 | 설계 | `design.md`(완벽한 개발문서) + `traceability.md`(초안) | 🟠 |
-| 6 | **🚪 테스트 먼저** | 테스트(RED) + `test-doc.md` → 구현 전 승인 | **하드 스톱** |
+| 3 | 갭 해소 | `02-resolved-spec.md` (확정 명세) | — |
+| 4 | **🚪 Gate 1** | 사용자가 `02-resolved-spec.md` 승인 | **하드 스톱** |
+| 5 | 설계 | `03-design.md`(완벽한 개발문서) + `05-traceability.md`(초안) | 🟠 |
+| 6 | **🚪 테스트 먼저** | 테스트(RED) + `04-test-doc.md` → 구현 전 승인 | **하드 스톱** |
 | 7 | 로직 구현 | 로직 테스트 **GREEN** | — |
 | 8 | UI 구현 | UI 동작 테스트 **GREEN** | — |
 | 9 | 시각 검증 | Playwright 스크린샷 → baseline 후보 | 🟠 |
-| 10 | **🔁 리뷰 루프** | **독립 리뷰어** → `review/r1.md, r2.md…`; 사용자 처분 → 재리뷰 | **하드 스톱** |
-| 11 | 종합 검증 | `traceability.md` 채움 + `verify.md`; spec정합·전체suite·분리 | — |
-| 12 | **🚪 Gate 2** | `completion.md` + `verify.md` + `traceability.md` + `review/` + `deferred.md` 보고 | **하드 스톱** |
+| 10 | **🔁 리뷰 루프** | **독립 리뷰어** → `06-review/r1.md, r2.md…`; 사용자 처분 → 재리뷰 | **하드 스톱** |
+| 11 | 종합 검증 | `05-traceability.md` 채움 + `07-verify.md`; spec정합·전체suite·분리 | — |
+| 12 | **🚪 Gate 2** | `08-completion.md` + `07-verify.md` + `05-traceability.md` + `06-review/` + `deferred.md` 보고 | **하드 스톱** |
 
 ### 두 가지 핵심 룰
 
@@ -151,13 +151,13 @@ docs/spec-to-code/<slug>/
 
 코드를 다 읽지 않고 문서로 "제대로 했는지" 확인하기 위한 문서들 (`v<N>/` 안, deferred만 공통):
 
-- **`resolved-spec.md`** — 모든 결정·케이스·엣지·에러를 못박은 계약 (Gate 1)
-- **`design.md`** — 완벽한 개발문서: 파일 구조·함수 목록+시그니처·버튼 동작·상태·에러분기 전부 (Gate 전 승인)
-- **`test-doc.md`** — 테스트 계획(케이스 목록) → 리포트(결과·커버리지)
-- **`traceability.md`** — 명세 ↔ 테스트 ↔ 코드 ↔ 통과여부 (커버리지 증명; 빈 칸 = 미완료)
-- **`review/r1.md, r2.md…`** — **독립 리뷰어** 의 라운드별 리뷰 (전부 보존)
-- **`verify.md`** — 종합 검증 리포트
-- **`completion.md`** — 요약·결정·실행/검증법·스크린샷·잔여
+- **`02-resolved-spec.md`** — 모든 결정·케이스·엣지·에러를 못박은 계약 (Gate 1)
+- **`03-design.md`** — 완벽한 개발문서: 파일 구조·함수 목록+시그니처·버튼 동작·상태·에러분기 전부 (Gate 전 승인)
+- **`04-test-doc.md`** — 테스트 계획(케이스 목록) → 리포트(결과·커버리지)
+- **`05-traceability.md`** — 명세 ↔ 테스트 ↔ 코드 ↔ 통과여부 (커버리지 증명; 빈 칸 = 미완료)
+- **`06-review/r1.md, r2.md…`** — **독립 리뷰어** 의 라운드별 리뷰 (전부 보존)
+- **`07-verify.md`** — 종합 검증 리포트
+- **`08-completion.md`** — 요약·결정·실행/검증법·스크린샷·잔여
 - **`deferred.md`** [공통] — 막힘·미룸·out-of-scope TODO를 **재개 트리거와 함께** 모음. 조용히 누락 안 됨(**no silent drop**), 재개 때 먼저 물어봄.
 
 ### 번들 에이전트 (전부 읽기 전용)
@@ -172,7 +172,7 @@ docs/spec-to-code/<slug>/
 
 게이트는 "지시" 가 아니라 **구조적으로 강제** 됩니다. 번들 PreToolUse 훅(`hooks/gate-guard.mjs`)이:
 
-- 실행 중인 작업(`.spec-to-code-state.json` 의 `active:true`)이 단계별로 **design.md 미승인 → 코드·테스트 전부 차단, 테스트 미승인 → 구현 차단** (doc home 문서·상태파일은 편집 허용)
+- 실행 중인 작업(`.spec-to-code-state.json` 의 `active:true`)이 단계별로 **03-design.md 미승인 → 코드·테스트 전부 차단, 테스트 미승인 → 구현 차단** (doc home 문서·상태파일은 편집 허용)
 - `designApproved`→`testsApproved` 순으로 승인돼야 단계적으로 풀림 (설계 없이 코딩 불가)
 - **scoped + fail-open**: 활성 상태파일이 없으면 완전 무동작 → 다른 프로젝트의 일반 코딩엔 전혀 간섭 안 함. 훅 오류 시에도 차단이 아니라 통과.
 

@@ -31,9 +31,9 @@ Produce a single **working spec**: the requirements as analyzable text, section 
 **Persist two things:**
 
 1. **Archive the original, verbatim** — copy what the user provided into `docs/spec-to-code/<slug>/source/<date>-original.<ext>`: a pasted spec saved as `.md`, a file copied as-is, an image copied in, a URL saved as its fetched/rendered snapshot (record the URL too). The user's own file stays where it is — this is a *copy*, so the no-touch rule still holds. Each run adds its original; never delete prior ones. Without this, a transient paste or a later-changed Figma/URL leaves nothing to verify normalization against or to re-normalize from.
-2. **Save the normalized working spec** to `working-spec.md`, with a header pointing to the archived original it was derived from.
+2. **Save the normalized working spec** to `01-working-spec.md`, with a header pointing to the archived original it was derived from.
 
-**Diff baseline = `working-spec.md` (normalized), not the raw originals** — run-to-run the original format may differ (PDF this time, HTML next), so only the normalized form is reliably comparable. On an update, diff the new normalized spec against the saved `working-spec.md`, then overwrite it (git history keeps the prior). The archived originals are there for fidelity-checking, re-normalization, and — when two runs share a format — a direct original-vs-original sanity diff.
+**Diff baseline = `01-working-spec.md` (normalized), not the raw originals** — run-to-run the original format may differ (PDF this time, HTML next), so only the normalized form is reliably comparable. On an update, diff the new normalized spec against the saved `01-working-spec.md`, then overwrite it (git history keeps the prior). The archived originals are there for fidelity-checking, re-normalization, and — when two runs share a format — a direct original-vs-original sanity diff.
 
 For **visual sources** (HTML, images, Figma), additionally capture a **visual notes** block: layout, spacing intent, component hierarchy, explicit and implied states, and any annotations. This feeds both gap analysis (e.g. "what does the error state look like?") and the UI/appearance layers later.
 

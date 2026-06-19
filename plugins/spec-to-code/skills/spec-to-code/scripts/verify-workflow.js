@@ -11,9 +11,9 @@ export const meta = {
 //   { resolvedSpec, testDoc, traceability, testCmd, e2eCmd, changedFiles: [...] }
 const a = args || {}
 const ctx = `
-Resolved Spec (A): ${a.resolvedSpec || 'docs/spec-to-code/<slug>/A-resolved-spec.md'}
-Test Doc (D):      ${a.testDoc || 'docs/spec-to-code/<slug>/D-test-doc.md'}
-Traceability (B):  ${a.traceability || 'docs/spec-to-code/<slug>/B-traceability.md'}
+Resolved Spec (A): ${a.resolvedSpec || 'docs/spec-to-code/<slug>/02-resolved-spec.md'}
+Test Doc (D):      ${a.testDoc || 'docs/spec-to-code/<slug>/04-test-doc.md'}
+Traceability (B):  ${a.traceability || 'docs/spec-to-code/<slug>/05-traceability.md'}
 Test command:      ${a.testCmd || '(detect from package.json)'}
 E2E command:       ${a.e2eCmd || '(detect: playwright test)'}
 Changed files:     ${(a.changedFiles || []).join(', ') || '(use git diff)'}

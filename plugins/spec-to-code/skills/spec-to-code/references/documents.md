@@ -1,6 +1,6 @@
 # Artifacts — templates & guidance
 
-The documents are the user's verification surface — they let the user confirm the work without reading all the code. Each is handed over at the gate where it's approved: `resolved-spec.md` at Gate 1; `design.md` + `test-doc.md`(plan) at the Tests gate; `review/r<k>.md` during the review loop; `verify.md` + `completion.md` + filled `traceability.md` + `deferred.md` at Gate 2. **Filenames are descriptive — no cryptic A/B/C letters.**
+The documents are the user's verification surface — they let the user confirm the work without reading all the code. Each is handed over at the gate where it's approved: `02-resolved-spec.md` at Gate 1; `03-design.md` + `04-test-doc.md`(plan) at the Tests gate; `06-review/r<k>.md` during the review loop; `07-verify.md` + `08-completion.md` + filled `05-traceability.md` + `deferred.md` at Gate 2. **Filenames are descriptive — no cryptic A/B/C letters.**
 
 ## Storage, naming & format (authoritative)
 
@@ -18,22 +18,22 @@ docs/spec-to-code/<slug>/
 ├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
 ├── deferred.md      COMMON: parking lot (carries across versions, living)
 ├── v1/                fresh run's full artifact set
-│   ├── working-spec.md   normalized snapshot — the diff baseline for the NEXT version
-│   ├── resolved-spec.md
-│   ├── design.md         the complete dev doc (Phase 5): files, functions, every behavior
-│   ├── traceability.md
-│   ├── test-doc.md     (Plan first; Report appended in P11)
-│   ├── review/r<k>.md       (ALL review rounds kept — never overwritten)
-│   ├── verify.md         comprehensive-verification report (Phase 11)
-│   └── completion.md
+│   ├── 01-working-spec.md   normalized snapshot — the diff baseline for the NEXT version
+│   ├── 02-resolved-spec.md
+│   ├── 03-design.md         the complete dev doc (Phase 5): files, functions, every behavior
+│   ├── 05-traceability.md
+│   ├── 04-test-doc.md     (Plan first; Report appended in P11)
+│   ├── 06-review/r<k>.md       (ALL review rounds kept — never overwritten)
+│   ├── 07-verify.md         comprehensive-verification report (Phase 11)
+│   └── 08-completion.md
 └── v2/                update run's full artifact set (delta applied)   ← created per update
     └── …
 ```
-**Version = run.** Fresh → `v1`. Each update → next `v(N+1)/` (count existing `v*` dirs). The version folder holds the complete per-run doc set so every spec version's docs are preserved whole (browsable, comparable — not only in git). **Common** files live at the slug root and accumulate across versions: `index.md` (points to latest + lists versions), `CHANGELOG.md`, `source/`, `deferred.md`. An update diffs the new spec against the **latest** `vN/working-spec.md`.
+**Version = run.** Fresh → `v1`. Each update → next `v(N+1)/` (count existing `v*` dirs). The version folder holds the complete per-run doc set so every spec version's docs are preserved whole (browsable, comparable — not only in git). **Common** files live at the slug root and accumulate across versions: `index.md` (points to latest + lists versions), `CHANGELOG.md`, `source/`, `deferred.md`. An update diffs the new spec against the **latest** `vN/01-working-spec.md`.
 
 ## Gates are document-driven (read this)
 **Every hard stop hands the user a Markdown file, not a chat summary.** At each gate: (1) produce/update the artifact MD(s) for that gate in the doc home; (2) tell the user the **exact path(s)**; (3) ask them to **read the file and approve, or edit it directly** (their edits ARE the approved version — read them back); (4) proceed only after approval. Chat Q&A is only for *gap resolution* (Phase 3 questions) — every *gate approval* is on a file the user can open, diff, and edit. Approved files persist in the doc home; **review rounds and any re-approved versions are all kept, never overwritten** (git history + per-round sections are the trail).
-`working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while A is the user-approved contract. `CHANGELOG.md` is the running record of *what each run set out to do and did* (one entry per fresh/update run); `index.md` is the one-screen pointer to everything.
+`01-working-spec.md` is written in Phase 1 (overwritten each update) — the machine-facing normalization, while 02-resolved-spec.md is the user-approved contract. `CHANGELOG.md` is the running record of *what each run set out to do and did* (one entry per fresh/update run); `index.md` is the one-screen pointer to everything.
 
 ---
 
@@ -47,8 +47,8 @@ source: <original spec path(s)/link(s)>
 status: <in progress @ Phase N | complete | blocked>
 
 ## Artifacts
-- [working-spec](working-spec.md) · [A resolved spec](resolved-spec.md) · [B traceability](traceability.md)
-- [C completion](completion.md) · [D test doc](test-doc.md) · [E review](review/r<k>.md) · [F deferred](deferred.md)
+- [working-spec](01-working-spec.md) · [resolved-spec](02-resolved-spec.md) · [traceability](05-traceability.md)
+- [completion](08-completion.md) · [test-doc](04-test-doc.md) · [review](06-review/r<k>.md) · [deferred](deferred.md)
 
 ## Run history
 - <date> — fresh: <one line>
@@ -89,7 +89,7 @@ The Tasks list is the literal "to-do for this update." Keep it honest — an unc
 
 ---
 
-## Resolved Spec (resolved-spec.md)
+## Resolved Spec (02-resolved-spec.md)
 The contract. Every gap from Phase 2, with the user's decision. This — not the original spec — is what the code implements.
 
 ```markdown
@@ -116,12 +116,12 @@ Each becomes ≥1 test in D. Format as given/when/then.
 
 ---
 
-## design.md — the complete dev doc (Phase 5)
+## 03-design.md — the complete dev doc (Phase 5)
 The exhaustive design the user approves **before any tests or code**. It must carry *everything needed to build*: a reader should be able to implement from this alone. Hand over the path; the user reads/edits/approves the file.
 
 ```markdown
 # Design — <feature>
-slug: <slug>   from: resolved-spec.md   status: draft | approved <date>
+slug: <slug>   from: 02-resolved-spec.md   status: draft | approved <date>
 
 ## 1. Approach & architecture
 - <overview in 2–4 sentences>
@@ -160,7 +160,7 @@ type ApplyResult = { discount: number; final: number; ... }
 ```
 The detail bar: button behavior, file paths, function list, state machine, error branches — all of it. If a developer would have to guess, it's not done.
 
-## Test Doc (test-doc.md)
+## Test Doc (04-test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
 ```markdown
@@ -186,7 +186,7 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 
 ---
 
-## Traceability Matrix (traceability.md)
+## Traceability Matrix (05-traceability.md)
 The coverage proof — one row per spec case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. An empty cell means unfinished work; never hide one.
 
 ```markdown
@@ -202,8 +202,8 @@ Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be
 
 ---
 
-## Review (per-round files, `v<N>/review/r<k>.md`)
-The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `review/r1.md`, `review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
+## Review (per-round files, `v<N>/06-review/r<k>.md`)
+The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `06-review/r1.md`, `06-review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
 
 ```markdown
 # Review — <feature>
@@ -269,7 +269,7 @@ Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. *
 
 ---
 
-## verify.md — comprehensive verification report (Phase 11)
+## 07-verify.md — comprehensive verification report (Phase 11)
 Produced after the review loop passes, handed to the user before Gate 2. Reports the conformance/coverage/separation audit + full-suite result.
 
 ```markdown
@@ -293,7 +293,7 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 - <pass — ready for Gate 2 | issues found → back to fix>
 ```
 
-## Completion Doc (completion.md)
+## Completion Doc (08-completion.md)
 The post-code report for Gate 2. Lets the user judge "built right" from docs + screenshots.
 
 ```markdown

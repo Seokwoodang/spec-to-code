@@ -41,4 +41,4 @@ Escalate the moment the change proves bigger than it looked:
 On escalation: tell the user plainly ("이거 생각보다 큰데, full로 전환할게요"), expand the single CHANGELOG entry into the full artifact set (A/B/D…), and resume the full flow from the right phase. **Lite never silently swallows a big change.**
 
 ## Doc footprint & growth
-Lite writes `source/`, `working-spec.md`, `index.md`, and a `CHANGELOG.md` entry — **no A–F files** unless escalated. If a lite-built feature later grows and needs a full run, that run back-fills A/B from the existing code+tests first (same as adopting an un-tracked feature), then proceeds.
+Lite writes `source/`, `01-working-spec.md`, `index.md`, and a `CHANGELOG.md` entry — **no A–F files** unless escalated. If a lite-built feature later grows and needs a full run, that run back-fills A/B from the existing code+tests first (same as adopting an un-tracked feature), then proceeds.

@@ -26,7 +26,7 @@ Never assume `.md`. Ask only if the input is genuinely unidentifiable.
 
 ## Normalize
 
-Produce a single **working spec**: the requirements as analyzable text, section by section, with a pointer back to each source. This is the input to gap analysis (Phase 2) — not a rewrite the user must approve (that is the Resolved Spec, Artifact A, which comes after gaps are resolved).
+Produce a single **working spec**: the requirements as analyzable text, section by section, with a pointer back to each source. This is the input to gap analysis (Phase 2) — not a rewrite the user must approve (that is the Resolved Spec, the resolved spec, which comes after gaps are resolved).
 
 **Persist two things:**
 
@@ -42,4 +42,4 @@ For **visual sources** (HTML, images, Figma), additionally capture a **visual no
 - **Lossy formats** — a screenshot may omit behavior entirely; an HTML mockup shows the happy path but not error/empty states. These omissions ARE gaps — feed them straight to gap analysis.
 - **Multiple conflicting sources** — a PDF spec plus a newer Figma may disagree. Record the conflict as a gap; do not silently pick one.
 - **Visual-only specs** — when the only input is an image/mockup, nearly all behavior is unstated. Expect a large gap list; that is correct, not a failure.
-- **Keep the originals reachable** — reference the source files/links in Artifact A so the user can check your reading against them.
+- **Keep the originals reachable** — reference the source files/links in the resolved spec so the user can check your reading against them.

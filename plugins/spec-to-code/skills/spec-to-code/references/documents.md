@@ -1,6 +1,6 @@
 # Artifacts — templates & guidance
 
-Six documents (A–F) are the user's verification surface — they let the user confirm the work without reading all the code: A + D(plan) at Gate 1, E during the review loop, F whenever something is parked, and C + D(report) + B + E + F at Gate 2.
+The documents are the user's verification surface — they let the user confirm the work without reading all the code. Each is handed over at the gate where it's approved: `resolved-spec.md` at Gate 1; `design.md` + `test-doc.md`(plan) at the Tests gate; `review/r<k>.md` during the review loop; `verify.md` + `completion.md` + filled `traceability.md` + `deferred.md` at Gate 2. **Filenames are descriptive — no cryptic A/B/C letters.**
 
 ## Storage, naming & format (authoritative)
 
@@ -16,20 +16,20 @@ docs/spec-to-code/<slug>/
 ├── index.md           COMMON: status + version list + link to latest
 ├── CHANGELOG.md       COMMON: run log across all versions
 ├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
-├── F-deferred.md      COMMON: parking lot (carries across versions, living)
+├── deferred.md      COMMON: parking lot (carries across versions, living)
 ├── v1/                fresh run's full artifact set
 │   ├── working-spec.md   normalized snapshot — the diff baseline for the NEXT version
-│   ├── A-resolved-spec.md
-│   ├── DESIGN.md         the complete dev doc (Phase 5): files, functions, every behavior
-│   ├── B-traceability.md
-│   ├── D-test-doc.md     (Plan first; Report appended in P11)
-│   ├── E-review.md       (ALL review rounds kept — never overwritten)
-│   ├── VERIFY.md         comprehensive-verification report (Phase 11)
-│   └── C-completion.md
+│   ├── resolved-spec.md
+│   ├── design.md         the complete dev doc (Phase 5): files, functions, every behavior
+│   ├── traceability.md
+│   ├── test-doc.md     (Plan first; Report appended in P11)
+│   ├── review/r<k>.md       (ALL review rounds kept — never overwritten)
+│   ├── verify.md         comprehensive-verification report (Phase 11)
+│   └── completion.md
 └── v2/                update run's full artifact set (delta applied)   ← created per update
     └── …
 ```
-**Version = run.** Fresh → `v1`. Each update → next `v(N+1)/` (count existing `v*` dirs). The version folder holds the complete per-run doc set so every spec version's docs are preserved whole (browsable, comparable — not only in git). **Common** files live at the slug root and accumulate across versions: `index.md` (points to latest + lists versions), `CHANGELOG.md`, `source/`, `F-deferred.md`. An update diffs the new spec against the **latest** `vN/working-spec.md`.
+**Version = run.** Fresh → `v1`. Each update → next `v(N+1)/` (count existing `v*` dirs). The version folder holds the complete per-run doc set so every spec version's docs are preserved whole (browsable, comparable — not only in git). **Common** files live at the slug root and accumulate across versions: `index.md` (points to latest + lists versions), `CHANGELOG.md`, `source/`, `deferred.md`. An update diffs the new spec against the **latest** `vN/working-spec.md`.
 
 ## Gates are document-driven (read this)
 **Every hard stop hands the user a Markdown file, not a chat summary.** At each gate: (1) produce/update the artifact MD(s) for that gate in the doc home; (2) tell the user the **exact path(s)**; (3) ask them to **read the file and approve, or edit it directly** (their edits ARE the approved version — read them back); (4) proceed only after approval. Chat Q&A is only for *gap resolution* (Phase 3 questions) — every *gate approval* is on a file the user can open, diff, and edit. Approved files persist in the doc home; **review rounds and any re-approved versions are all kept, never overwritten** (git history + per-round sections are the trail).
@@ -47,8 +47,8 @@ source: <original spec path(s)/link(s)>
 status: <in progress @ Phase N | complete | blocked>
 
 ## Artifacts
-- [working-spec](working-spec.md) · [A resolved spec](A-resolved-spec.md) · [B traceability](B-traceability.md)
-- [C completion](C-completion.md) · [D test doc](D-test-doc.md) · [E review](E-review.md) · [F deferred](F-deferred.md)
+- [working-spec](working-spec.md) · [A resolved spec](resolved-spec.md) · [B traceability](traceability.md)
+- [C completion](completion.md) · [D test doc](test-doc.md) · [E review](review/r<k>.md) · [F deferred](deferred.md)
 
 ## Run history
 - <date> — fresh: <one line>
@@ -68,8 +68,8 @@ The answer to "what has to be done for this update, and what was done." One entr
 - modified: <C-id> — <what changed, old → new>
 - added: <new requirement>
 - removed: <requirement>
-### Impact (reverse-lookup via Matrix B)
-| change | A-case | test(s) | code unit | screenshots |
+### Impact (reverse-lookup via the traceability matrix)
+| change | spec-case | test(s) | code unit | screenshots |
 |--------|--------|---------|-----------|-------------|
 | modify discount cap | C8 | T7 | calcDiscount() | cart-applied |
 ### Tasks
@@ -89,7 +89,7 @@ The Tasks list is the literal "to-do for this update." Keep it honest — an unc
 
 ---
 
-## A — Resolved Spec
+## Resolved Spec (resolved-spec.md)
 The contract. Every gap from Phase 2, with the user's decision. This — not the original spec — is what the code implements.
 
 ```markdown
@@ -116,12 +116,12 @@ Each becomes ≥1 test in D. Format as given/when/then.
 
 ---
 
-## DESIGN — the complete dev doc (Phase 5)
+## design.md — the complete dev doc (Phase 5)
 The exhaustive design the user approves **before any tests or code**. It must carry *everything needed to build*: a reader should be able to implement from this alone. Hand over the path; the user reads/edits/approves the file.
 
 ```markdown
 # Design — <feature>
-slug: <slug>   from: A-resolved-spec.md   status: draft | approved <date>
+slug: <slug>   from: resolved-spec.md   status: draft | approved <date>
 
 ## 1. Approach & architecture
 - <overview in 2–4 sentences>
@@ -149,7 +149,7 @@ type ApplyResult = { discount: number; final: number; ... }
 - **Apply button click**: validate input → call X → on success Y → on error Z (each branch).
 - **States**: empty / loading / applied / error / disabled — what shows, what's enabled.
 - **Transitions**: double-click, re-apply, remove, refresh — exact behavior.
-- **Edge cases**: (enumerate, tie each to an A-case)
+- **Edge cases**: (enumerate, tie each to an spec-case)
 - **Errors**: each failure path → user-visible result.
 
 ## 6. Dependencies / integration points
@@ -160,7 +160,7 @@ type ApplyResult = { discount: number; final: number; ... }
 ```
 The detail bar: button behavior, file paths, function list, state machine, error branches — all of it. If a developer would have to guess, it's not done.
 
-## D — Test Doc
+## Test Doc (test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
 ```markdown
@@ -186,7 +186,7 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 
 ---
 
-## B — Traceability Matrix
+## Traceability Matrix (traceability.md)
 The coverage proof — one row per spec case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. An empty cell means unfinished work; never hide one.
 
 ```markdown
@@ -202,7 +202,7 @@ Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be
 
 ---
 
-## E — Review (per-round files, `v<N>/review/r<k>.md`)
+## Review (per-round files, `v<N>/review/r<k>.md`)
 The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `review/r1.md`, `review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
 
 ```markdown
@@ -244,7 +244,7 @@ Each finding carries id, severity (`critical/blocker` · `major` · `minor`), `f
 
 ---
 
-## F — Deferred & Blocked (parking lot)
+## Deferred & Blocked (deferred.md) (parking lot)
 The single home for everything that cannot be done now or was consciously postponed — so nothing is silently dropped. A living doc: append to it the moment something is parked, in any phase. Reviewed at Gate 2, and — crucially — **proactively surfaced at the start of every run that resumes the feature**: open F items are presented to the user with the question "take any of these on now?" before work proceeds, so a deferral is never forgotten across sessions.
 
 What lands here:
@@ -260,16 +260,16 @@ What lands here:
 | ID | Item | Origin | Reason | Revisit when | Links | Status |
 |----|------|--------|--------|--------------|-------|--------|
 | F1 | bulk-delete UX | gap P3 | postponed (v2) | next milestone | A:C7 | open |
-| F2 | retry on 503 | review R1-4 | blocked-on backend retry header | endpoint ships | A:C3, B-row | open |
+| F2 | retry on 503 | review R1-4 | blocked-on backend retry header | endpoint ships | A:C3, traceability-row | open |
 | F3 | i18n of error copy | P8 impl | out-of-scope this PR | i18n epic | — | open |
 ```
 Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. **Revisit when** is a concrete condition or date, never blank — a parked item with no trigger is a lost item.
 
-**No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its Matrix-B row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
+**No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its traceability row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
 
 ---
 
-## VERIFY — comprehensive verification report (Phase 11)
+## verify.md — comprehensive verification report (Phase 11)
 Produced after the review loop passes, handed to the user before Gate 2. Reports the conformance/coverage/separation audit + full-suite result.
 
 ```markdown
@@ -278,8 +278,8 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 ## Suite
 - runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
 
-## Conformance (every A-case exercised & asserted)
-| A-case | test | asserted? | verdict |
+## Conformance (every spec-case exercised & asserted)
+| spec-case | test | asserted? | verdict |
 |--------|------|-----------|---------|
 | C1 | T1 | yes | ✅ |
 
@@ -293,7 +293,7 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 - <pass — ready for Gate 2 | issues found → back to fix>
 ```
 
-## C — Completion Doc
+## Completion Doc (completion.md)
 The post-code report for Gate 2. Lets the user judge "built right" from docs + screenshots.
 
 ```markdown

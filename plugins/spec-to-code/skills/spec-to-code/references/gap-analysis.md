@@ -60,7 +60,7 @@ Tag each gap so questioning can prioritize and so trivial items don't drown the 
 
 ## Exit condition
 
-Phase 2/3 is done only when: zero BLOCKER/BEHAVIORAL gaps remain open, every assumed TRIVIAL default is listed for veto, and every resolved item is expressible as a test case in the Test Plan (Artifact D). Anything that resists becoming a test goes back to the user.
+Phase 2/3 is done only when: zero BLOCKER/BEHAVIORAL gaps remain open, every assumed TRIVIAL default is listed for veto, and every resolved item is expressible as a test case in the Test Plan (the test doc). Anything that resists becoming a test goes back to the user.
 
 ## Large specs
 

@@ -27,14 +27,14 @@ Stop legend: 🔴 = hard stop in **both** modes · 🟠/🟡 = additional stop i
 |---|-------|--------|------|
 | 1 | Ingest & probe | normalized working spec + env facts (runner, UI?, Playwright?) | — |
 | 2 | Gap analysis | gap list (exhaustive) | — |
-| 3 | Gap resolution | **A. Resolved Spec** + **D. Test Plan** | → 4 |
+| 3 | Gap resolution | **resolved-spec** + **test-doc**(plan) | → 4 |
 | 4 | **🚪 Gate 1** | user approves A + D | 🔴 |
-| 5 | Design | layer split (logic / UI) + **B. Traceability Matrix** (draft) | 🟠 |
+| 5 | Design | layer split (logic / UI) + **traceability** (draft) | 🟠 |
 | 6 | Tests first | logic unit tests + UI behavior tests — **RED** | 🔴 |
 | 7 | Implement logic | logic tests **GREEN** | 🟡 |
 | 8 | Implement UI | UI behavior tests **GREEN** | 🟡 |
 | 9 | Visual verify | Playwright screenshots → baseline candidates | 🟠 |
-| 10 | **🔁 Review loop** | **E. Review Doc**; review → user → fix → re-review until pass | 🔴 |
+| 10 | **🔁 Review loop** | **review/r1,r2…**; review → user → fix → re-review until pass | 🔴 |
 | 11 | Comprehensive verify | fill **B**; spec-conformance + full suite + separation audit | — |
 | 12 | **🚪 Gate 2** | report **C** + **D**(report) + **B** + **E** + **F** + screenshots | 🔴 |
 
@@ -54,7 +54,7 @@ Selection: default is **checkpoint**. The user can request step-through ("꼼꼼
 
 ## Gates are document-driven (not chat)
 **Every hard stop hands the user a Markdown file at a known path — never a chat-summary table.** At each gate:
-1. **Produce/update the gate's artifact MD** in the doc home (e.g. `DESIGN.md` at the design gate, `D-test-doc.md` at the tests gate, `E-review.md` round at the review loop, `VERIFY.md` after comprehensive verify).
+1. **Produce/update the gate's artifact MD** in the doc home (e.g. `design.md` at the design gate, `test-doc.md` at the tests gate, `review/r<k>.md` round at the review loop, `verify.md` after comprehensive verify).
 2. **Tell the user the exact path** and ask them to **read it and approve, or edit the file directly** — their edits ARE the approved version; read them back.
 3. **Proceed only after approval.** Re-edits produce a new version/round; **all versions are kept, never overwritten** (per-round sections + git history).
 
@@ -65,15 +65,15 @@ Chat Q&A (incl. `AskUserQuestion`) is for **gap resolution only** (Phase 3). Eve
 ### 1 — Ingest & probe
 **Ingest:** specs arrive in any format — markdown, HTML/mockup, PDF, image/Figma export, `.docx`, URL, or pasted text. Detect the format and normalize it into one analyzable **working spec**, preserving a pointer to each source. For visual sources (HTML/image/Figma), also capture a **visual notes** block (layout, component hierarchy, states) for the UI layer. Lossy formats (a screenshot, a happy-path mockup) omit behavior — those omissions are gaps, fed straight to Phase 2. See `references/spec-ingestion.md`.
 
-**Feature identity & snapshot:** establish a stable **`<slug>`** for the feature — lowercase kebab-case from its name (e.g. `cart-bulk-delete`); confirm with the user. The slug names the doc home `docs/spec-to-code/<slug>/` (or nest under the repo's own docs convention; decide once). **Pick the version folder:** fresh → `v1/`; update → next `v(N+1)/` (count existing `v*` dirs). Then persist: **archive the original verbatim** into `source/<date>-original.<ext>` (COMMON, at slug root — a copy; paste saved as `.md`, URL as fetched snapshot); **save the normalized `working-spec.md` inside `v<N>/`** (header points to the archived original); create/update **`index.md`** (COMMON — status + version list + latest link) and append a **`CHANGELOG.md`** entry (COMMON — fresh seeds "initial build"; update records diff + task checklist). Per-version artifacts (working-spec, A, DESIGN, B, D, E, VERIFY, C) live in `v<N>/`; common files (index, CHANGELOG, source, F) at the slug root. The diff baseline for an update is the **latest `vN/working-spec.md`**; archived originals exist for fidelity-checks.
+**Feature identity & snapshot:** establish a stable **`<slug>`** for the feature — lowercase kebab-case from its name (e.g. `cart-bulk-delete`); confirm with the user. The slug names the doc home `docs/spec-to-code/<slug>/` (or nest under the repo's own docs convention; decide once). **Pick the version folder:** fresh → `v1/`; update → next `v(N+1)/` (count existing `v*` dirs). Then persist: **archive the original verbatim** into `source/<date>-original.<ext>` (COMMON, at slug root — a copy; paste saved as `.md`, URL as fetched snapshot); **save the normalized `working-spec.md` inside `v<N>/`** (header points to the archived original); create/update **`index.md`** (COMMON — status + version list + latest link) and append a **`CHANGELOG.md`** entry (COMMON — fresh seeds "initial build"; update records diff + task checklist). Per-version artifacts (working-spec, resolved-spec, design, test-doc, traceability, review/, verify, completion) live in `v<N>/`; common files (index, CHANGELOG, source, F) at the slug root. The diff baseline for an update is the **latest `vN/working-spec.md`**; archived originals exist for fidelity-checks.
 
 **Open the gate-guard state.** Write `.spec-to-code-state.json` at the project root: `{"active":true,"slug":"<slug>","tier":"full|lite","mode":"checkpoint","specApproved":false,"designApproved":false,"testsApproved":false,"docHome":"docs/spec-to-code/<slug>"}`. The bundled PreToolUse hook **blocks code/test edits in stages** until each doc is approved (design before anything, tests before implementation) — doc-home artifacts and the state file stay editable. The gate cannot be skipped. See Enforcement below. This snapshot — not the user's original file, which stays wherever they keep it — is what a later update diffs against. Never move or edit the user's original spec; only reference it. All artifacts are Markdown in the doc home; code/tests stay in the project's conventional locations. See `references/documents.md` for the authoritative storage/naming/format rules and templates.
 
 **Probe** (project-agnostic — detect, do not assume): test runner (`vitest`/`jest`/`pytest`/`go test`…); whether a renderable UI exists or it's CLI/library (decides if UI layers apply); Playwright presence (if a UI exists but it's absent, *offer* to add it — never install silently); doc home location (default `docs/spec-to-code/<slug>/`, else match the repo convention). **Read the repo's `CLAUDE.md` and obey it** — especially "never commit without explicit instruction" and "don't touch spec files."
 
-**Mode:** list existing slugs under `docs/spec-to-code/`. If one holds a prior version folder (`v*/working-spec.md` + `v*/A-resolved-spec.md`) for **this** feature, it is an **UPDATE** — create the next `v(N+1)/`, diff the new working spec against the **latest `vN/working-spec.md`**, and follow `references/spec-update.md` (impact-analyze via Matrix B, resolve delta gaps, delta TDD, **regression**), then overwrite the snapshot. Otherwise it is **FRESH** — continue below. If it's ambiguous which slug a revision targets (e.g. the new spec file is named differently), **ask the user** rather than guess; a wrong match corrupts the diff.
+**Mode:** list existing slugs under `docs/spec-to-code/`. If one holds a prior version folder (`v*/working-spec.md` + `v*/resolved-spec.md`) for **this** feature, it is an **UPDATE** — create the next `v(N+1)/`, diff the new working spec against the **latest `vN/working-spec.md`**, and follow `references/spec-update.md` (impact-analyze via the traceability matrix, resolve delta gaps, delta TDD, **regression**), then overwrite the snapshot. Otherwise it is **FRESH** — continue below. If it's ambiguous which slug a revision targets (e.g. the new spec file is named differently), **ask the user** rather than guess; a wrong match corrupts the diff.
 
-**Deferred check (proactive, on every resume):** whenever a run targets a feature whose `F-deferred.md` has open items, **surface them up front and ask the user which to take on now** — before proceeding. Do not leave a "not now" silently parked across sessions. This fires on *any* resumption — an update run, or simply returning to the feature with no spec change — so every deferral is actively revisited with the user, never forgotten. Flag items whose revisit trigger has plausibly fired (e.g. the blocking backend endpoint now exists). Items the user again defers stay in F with their triggers; items picked up join this run's scope.
+**Deferred check (proactive, on every resume):** whenever a run targets a feature whose `deferred.md` has open items, **surface them up front and ask the user which to take on now** — before proceeding. Do not leave a "not now" silently parked across sessions. This fires on *any* resumption — an update run, or simply returning to the feature with no spec change — so every deferral is actively revisited with the user, never forgotten. Flag items whose revisit trigger has plausibly fired (e.g. the blocking backend endpoint now exists). Items the user again defers stay in F with their triggers; items picked up join this run's scope.
 
 **Tier (full vs lite):** run a **quick gap scan** (inline, not the exhaustive fan-out) to size the change, then pick the tier — **lite** for small, low-risk changes (zero blocker gaps, no new external dependency, small blast radius, e.g. "add one more button"); **full** otherwise. The user may request lite explicitly; honor it unless the scan finds a blocker, then escalate. Lite collapses the flow to 4 steps / 1 gate / a single CHANGELOG entry while keeping the safety core (user-resolved gaps, test-first, regression, no unprompted commit) — see `references/lite-mode.md`. If a lite run proves bigger than it looked, **escalate to full** mid-run and tell the user. The rest of this document is the **full** flow.
 
@@ -81,16 +81,16 @@ Chat Q&A (incl. `AskUserQuestion`) is for **gap resolution only** (Phase 3). Eve
 Enumerate everything needed for *complete* code that the working spec does not pin down. Be exhaustive, not polite. See `references/gap-analysis.md` for the taxonomy (states, transitions, edge values, error/failure modes, empty/loading/boundary, concurrency, permissions, i18n, a11y, non-functional). For a large/multi-section spec, fan out the *reading* with the bundled **`gap-hunter`** agent (`subagent_type: 'gap-hunter'`) — one per section, distinct lenses — else `Explore`/inline. Resolution stays interactive.
 
 ### 3 — Gap resolution
-Group gaps into a few decision questions and put them to the user (`AskUserQuestion` for crisp choices; prose for open ones). Batch — never drip one at a time. As answers land, write **Artifact A (Resolved Spec)** and derive **Artifact D (Test Plan)**. Loop until zero open gaps and every requirement maps to a planned test. Templates: `references/documents.md`.
+Group gaps into a few decision questions and put them to the user (`AskUserQuestion` for crisp choices; prose for open ones). Batch — never drip one at a time. As answers land, write **the resolved spec (Resolved Spec)** and derive **the test doc (Test Plan)**. Loop until zero open gaps and every requirement maps to a planned test. Templates: `references/documents.md`.
 
 ### 4 — 🚪 Gate 1 (hard stop)
-Hand over `A-resolved-spec.md` and get the user's approval on the file. **Only after approval**, set `specApproved: true`. (Code/tests are still blocked — design must be approved next.) If a decision changes, update A and re-present.
+Hand over `resolved-spec.md` and get the user's approval on the file. **Only after approval**, set `specApproved: true`. (Code/tests are still blocked — design must be approved next.) If a decision changes, update A and re-present.
 
 ### 5 — Design · 🟠
-Write **`DESIGN.md` — the complete dev doc**: approach, the logic/UI split, **every file with its path**, data models/types, **the full function list with signatures + behavior**, an exhaustive **behavior spec** (every interaction — e.g. button-click branch by branch — every state, transition, edge, and error path), and integration points. A developer must be able to build from this alone. **DESIGN.md is mandatory and hook-enforced** — no test or code file can be written until it is approved. Also draft **Artifact B (Traceability Matrix)** (`TODO` rows). **Hand over the path** (`docs/spec-to-code/<slug>/DESIGN.md`) and have the user read/edit/approve the file; on approval set `designApproved: true` (this unblocks writing the RED tests). (Step-through: approve DESIGN here on its own; checkpoint: approved together with the RED tests at the Tests gate.)
+Write **`design.md` — the complete dev doc**: approach, the logic/UI split, **every file with its path**, data models/types, **the full function list with signatures + behavior**, an exhaustive **behavior spec** (every interaction — e.g. button-click branch by branch — every state, transition, edge, and error path), and integration points. A developer must be able to build from this alone. **design.md is mandatory and hook-enforced** — no test or code file can be written until it is approved. Also draft **traceability.md** (`TODO` rows). **Hand over the path** (`docs/spec-to-code/<slug>/design.md`) and have the user read/edit/approve the file; on approval set `designApproved: true` (this unblocks writing the RED tests). (Step-through: approve design.md here on its own; checkpoint: approved together with the RED tests at the Tests gate.)
 
 ### 6 — Tests first (RED) · 🔴 Tests gate
-Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3. Record them in **`D-test-doc.md`** (Plan section). **Hard stop (both modes):** hand over the paths — `DESIGN.md` (if not yet approved) **and** `D-test-doc.md` — and have the user read/edit/**approve the files** *before writing any implementation*. On approval set `testsApproved: true` (this unblocks implementation files; the hook blocks impl until then). The tests are the executable spec, so approving them largely determines the code.
+Write planned tests before implementation: logic unit tests + UI-behavior tests (state→view, interactions, error display). They must fail for the right reason. Writing them is the final gap detector — a test that can't be written concretely → back to Phase 3. Record them in **`test-doc.md`** (Plan section). **Hard stop (both modes):** hand over the paths — `design.md` (if not yet approved) **and** `test-doc.md` — and have the user read/edit/**approve the files** *before writing any implementation*. On approval set `testsApproved: true` (this unblocks implementation files; the hook blocks impl until then). The tests are the executable spec, so approving them largely determines the code.
 
 ### 7–8 — Implement to GREEN
 Logic until logic tests pass; then thin UI over the tested logic until UI-behavior tests pass. Keep the split intact. (Step-through: stop after each to show the code; checkpoint: surfaced together at the Review loop.)
@@ -99,7 +99,7 @@ Logic until logic tests pass; then thin UI over the tested logic until UI-behavi
 For UIs, run the app and capture Playwright screenshots per state — *baseline candidates* the user blesses at Gate 2, then guarded by `toHaveScreenshot()`. Baselines live where Playwright stores them (its `*-snapshots/` dirs beside the e2e tests) and are committed; C links to them. See `references/verification.md`.
 
 ### 10 — 🔁 Review loop (iterative gate)
-Each round is run by an **independent reviewer** — spawn the bundled **`code-reviewer`** agent (`subagent_type: 'code-reviewer'`; if unavailable, a fresh `general-purpose`/`claude` subagent with the reviewer prompt). It gets a **fresh context** and sees only the **current diff + Artifact A** — never the main loop's reasoning. The author (you, the main loop) must NOT write the review; that is self-review and defeats the point. Dimensions: spec-faithfulness, correctness/bugs, edge cases, security, simplification/reuse, convention adherence, logic/UI separation. Loop **with the user, document-driven**:
+Each round is run by an **independent reviewer** — spawn the bundled **`code-reviewer`** agent (`subagent_type: 'code-reviewer'`; if unavailable, a fresh `general-purpose`/`claude` subagent with the reviewer prompt). It gets a **fresh context** and sees only the **current diff + the resolved spec** — never the main loop's reasoning. The author (you, the main loop) must NOT write the review; that is self-review and defeats the point. Dimensions: spec-faithfulness, correctness/bugs, edge cases, security, simplification/reuse, convention adherence, logic/UI separation. Loop **with the user, document-driven**:
 1. The reviewer writes its findings to a **new per-round file `v<N>/review/r<k>.md`** (round 1 = `r1.md`, round 2 = `r2.md`, …). **Hand over the path.** The user marks each finding fix / defer / reject in/on the file.
 2. Apply accepted fixes.
 3. **Re-run the independent reviewer on the *updated* code** — a genuinely fresh read producing a **new file `r<k+1>.md`** (it re-confirms prior items resolved AND may surface new ones). Never edit a prior round's file; each round is its own document, all kept.
@@ -108,31 +108,35 @@ Each round is run by an **independent reviewer** — spawn the bundled **`code-r
 Do not proceed to Phase 11 until the loop passes. **🔴 hard stop in both modes; NEVER self-reviewed and NEVER self-dispositioned** — an independent reviewer produces findings, the user dispositions them, you only apply accepted fixes and trigger the next independent re-review. This mirrors a real PR review: fresh independent pass each round, new review each time.
 
 ### 11 — Comprehensive verify
-Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline. Write the result to **`VERIFY.md`** and hand the user the path (this is produced only after the review loop has been approved).
+Run the full suite, then audit: conformance (every Artifact-A case demonstrably covered), traceability fully filled (no `TODO` rows — empty cells = unfinished work, say so), logic/UI separation. Good Workflow fan-out (conformance/coverage/separation as parallel dimensions, each adversarially checked by the **`spec-verifier`** agent) — see `scripts/verify-workflow.js`. Only call Workflow if multi-agent orchestration is opted into; else audit inline. Write the result to **`verify.md`** and hand the user the path (this is produced only after the review loop has been approved).
 
 ### 12 — 🚪 Gate 2 (hard stop)
 Compile **C (Completion Doc)** + **D (Test Report)** + filled **B** + **E (Review Doc)** + **F (Deferred & Blocked)** + screenshots, and report. The user reviews docs, not raw code. Surface the open F items (what's parked + revisit triggers) and any residual assumptions explicitly. Wait for approval. Never commit unless explicitly told. On completion (or if the user abandons the run), set `active: false` in `.spec-to-code-state.json` so the gate guard goes dormant.
 
-## The artifacts (each gate hands one over)
+## The artifacts (descriptive filenames — no cryptic letters)
 
-| Doc | Purpose | Written | Approved at |
-|-----|---------|---------|-------------|
-| A · Resolved Spec | every decision/case/edge/error pinned down | P3 | Gate 1 |
-| **DESIGN** | complete dev doc — files, functions, every behavior | P5 | Tests gate |
-| D · Test Doc | Plan (case list) → Report (results, coverage) | Plan P6 · Report P11 | Tests gate |
-| B · Traceability Matrix | spec ↔ test ↔ code ↔ pass — coverage proof | P5 draft → P11 fill | — |
-| E · Review Doc | code-review findings, **all rounds kept**, user dispositions | P10 | Review loop |
-| **VERIFY** | comprehensive-verification report | P11 | (read before Gate 2) |
-| C · Completion Doc | summary, decisions, how-to-run, screenshots, residual | P11–12 | Gate 2 |
-| F · Deferred & Blocked | parking lot — blocked/deferred/out-of-scope + triggers | any phase (living) | — |
+Per-version files live in `v<N>/`; common files at the slug root. Each gate hands one over for approval.
 
-Full templates: `references/documents.md`. Write artifacts in the user's working language. Matrix B is the spine of "did you do it right" — an empty cell is an admission, never hide one.
+| File | Purpose | Written | Approved at |
+|------|---------|---------|-------------|
+| `working-spec.md` | normalized spec snapshot (diff baseline) | P1 | — |
+| `resolved-spec.md` | every decision/case/edge/error pinned down | P3 | Gate 1 |
+| `design.md` | complete dev doc — files, functions, every behavior | P5 | Tests gate |
+| `test-doc.md` | Plan (case list) → Report (results, coverage) | Plan P6 · Report P11 | Tests gate |
+| `traceability.md` | spec ↔ test ↔ code ↔ pass — coverage proof | P5 draft → P11 fill | — |
+| `review/r<k>.md` | independent review findings, **all rounds kept** | P10 | Review loop |
+| `verify.md` | comprehensive-verification report | P11 | (read before Gate 2) |
+| `completion.md` | summary, decisions, how-to-run, screenshots, residual | P11–12 | Gate 2 |
+| `deferred.md` | parking lot / TODO — blocked/deferred/out-of-scope + triggers | any phase (living, COMMON) | — |
+| `index.md` · `CHANGELOG.md` · `source/` | manifest · run log · original archive | P1+ (COMMON) | — |
 
-**No silent drop:** anything that cannot be done now or is postponed goes to **Artifact F** the moment it arises (a deferred gap, a `defer`-dispositioned review finding, work blocked on a backend/external dependency, an out-of-scope discovery). Each F entry carries a concrete revisit trigger. If a parked item maps to an A-case, its test is marked skipped/pending with a reason pointing to the F id and its B-row is marked `deferred` — never quietly passed or blank.
+Full templates: `references/documents.md`. Write artifacts in the user's working language. `traceability.md` is the spine of "did you do it right" — an empty cell is an admission, never hide one.
+
+**No silent drop:** anything that cannot be done now or is postponed goes to **the deferred list** the moment it arises (a deferred gap, a `defer`-dispositioned review finding, work blocked on a backend/external dependency, an out-of-scope discovery). Each F entry carries a concrete revisit trigger. If a parked item maps to an spec-case, its test is marked skipped/pending with a reason pointing to the F id and its traceability-row is marked `deferred` — never quietly passed or blank.
 
 ## Enforcement (gate guard)
 The checkpoints are structural, not just convention — a bundled **PreToolUse hook** (`hooks/gate-guard.mjs`) enforces them in **stages**:
-- `designApproved: false` → **all code & test files blocked.** You cannot write anything until **`DESIGN.md` is written and approved.** (Doc home + state file stay writable.)
+- `designApproved: false` → **all code & test files blocked.** You cannot write anything until **`design.md` is written and approved.** (Doc home + state file stay writable.)
 - `designApproved: true, testsApproved: false` → **test files allowed, implementation files blocked.** Write the RED tests, get them approved, then implement.
 - `testsApproved: true` → everything allowed.
 
@@ -145,7 +149,7 @@ The guard is **scoped and fail-open**: with no active `.spec-to-code-state.json`
 - Scale rigor to scope: a one-function spec is lighter than a multi-screen feature — but the resolved-spec rule and the checkpoints always hold.
 
 ## Modes: fresh vs update
-This flow runs greenfield **and** for later spec revisions. Phase 1 detects which: prior artifacts in the doc home → **update**; none → **fresh**. The update path (`references/spec-update.md`) diffs old vs new spec, reverse-looks-up Matrix B to find the impacted cases/tests/code, and records the work as a **`CHANGELOG.md` entry whose Tasks checklist is the user-facing "what this update will do"** — presented at the delta Gate 1 for approval. It then resolves only the delta's gaps, does delta TDD, and — critically — runs the **full prior suite as a regression guard** so a revision never silently breaks an existing case. Artifacts A/B/D/F are updated with history kept, and the CHANGELOG tasks are ticked off to completion. The checkpoint discipline and the resolved-spec rule are identical; only the scope narrows to the delta + regression.
+This flow runs greenfield **and** for later spec revisions. Phase 1 detects which: prior artifacts in the doc home → **update**; none → **fresh**. The update path (`references/spec-update.md`) diffs old vs new spec, reverse-looks-up the traceability matrix to find the impacted cases/tests/code, and records the work as a **`CHANGELOG.md` entry whose Tasks checklist is the user-facing "what this update will do"** — presented at the delta Gate 1 for approval. It then resolves only the delta's gaps, does delta TDD, and — critically — runs the **full prior suite as a regression guard** so a revision never silently breaks an existing case. Artifacts A/B/D/F are updated with history kept, and the CHANGELOG tasks are ticked off to completion. The checkpoint discipline and the resolved-spec rule are identical; only the scope narrows to the delta + regression.
 
 ## Tiers: full vs lite
 Orthogonal to fresh/update. **Full** (this document's 12 phases) is for large or uncertain work. **Lite** (`references/lite-mode.md`) is for small, well-scoped changes — 4 steps, 1 confirmation gate, a single CHANGELOG entry instead of A–F, inline review, no agent fan-out. Tier is chosen by *scope* (decided by the quick scan in Phase 1), not by mode: a small fresh task and a small update are both lite; a large rework is full. The **safety core never changes** — gaps resolved by the user, test-first, regression on updates, no unprompted commit. A lite run **escalates to full** the moment a blocker, hidden complexity, or unexpected regression appears, so lite never silently swallows a big change.

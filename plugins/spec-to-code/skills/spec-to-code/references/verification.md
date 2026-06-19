@@ -14,14 +14,14 @@ The flow proves correctness in three layers, each matched to what it can actuall
 - **No UI** (CLI/library): skip the UI-behavior and appearance layers entirely; logic TDD carries the whole verification.
 
 ## Layer 1 — Logic TDD
-1. From the Test Plan (Artifact D), write one test per case before implementing.
+1. From the Test Plan (the test doc), write one test per case before implementing.
 2. Run → confirm RED for the right reason (function missing / not-implemented), not a typo.
 3. Implement the smallest logic to go GREEN. Refactor with tests green.
 4. Keep logic pure and import-light so it tests without DOM/network — this enforces the logic/UI split.
 
 ## Layer 2 — UI behavior (Playwright E2E)
 - Drive the real browser: render each state, perform interactions, assert the resulting DOM/text/visibility.
-- Cover the state and transition cases from Artifact A: empty, loading, error, success, disabled, etc.
+- Cover the state and transition cases from the resolved spec: empty, loading, error, success, disabled, etc.
 - Prefer role/label/text selectors over brittle CSS. Stub network at the boundary for deterministic states.
 - Real-browser E2E beats jsdom here because it exercises actual events, focus, and layout-dependent behavior.
 
@@ -35,8 +35,8 @@ The flow proves correctness in three layers, each matched to what it can actuall
 
 ## Comprehensive verify (Phase 10)
 Run everything, then audit three dimensions — inline, or as a Workflow fan-out (`scripts/verify-workflow.js`) if multi-agent orchestration is opted into:
-1. **Conformance** — every case in Artifact A is demonstrably exercised by a test or screenshot.
-2. **Coverage / traceability** — Artifact B has no `TODO`/empty rows; each spec case → test → code → pass.
+1. **Conformance** — every case in the resolved spec is demonstrably exercised by a test or screenshot.
+2. **Coverage / traceability** — the traceability matrix has no `TODO`/empty rows; each spec case → test → code → pass.
 3. **Separation** — logic has no UI imports; UI is thin over tested logic. Flag leaks.
 
 Adversarially verify findings: for each "covered" claim, a skeptic checks the test actually asserts the behavior (not a hollow test that always passes). Report empty matrix cells honestly — they are unfinished work, not noise to hide.

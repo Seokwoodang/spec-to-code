@@ -4,7 +4,7 @@ Lite and full are **orthogonal to fresh/update** — the tier is chosen by *scop
 
 ## Choosing the tier (end of Phase 1)
 After normalizing the spec/change, run a **quick gap scan** — inline, not the exhaustive `gap-hunter` fan-out — just enough to size the change. Then pick:
-- **lite** if: zero blocker gaps, no new external dependency, small blast radius (≈ ≤2–3 affected cases / a handful of files; for updates, a small impact set via Matrix B).
+- **lite** if: zero blocker gaps, no new external dependency, small blast radius (≈ ≤2–3 affected cases / a handful of files; for updates, a small impact set via the traceability matrix).
 - **full** otherwise.
 - The user may request lite explicitly ("가볍게 가자", "버튼 하나니까"). Honor it — **unless the scan finds a blocker or hidden complexity**, in which case escalate (below). Never take "it's small" purely at face value; the quick scan is what confirms it.
 

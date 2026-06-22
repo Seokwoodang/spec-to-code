@@ -24,7 +24,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 | # | Phase | Output | Stop |
 |---|-------|--------|------|
 | 1 | Ingest & probe | working spec + env facts (runner, DB?, framework) + mode/tier | — |
-| 2 | Gap analysis | exhaustive gap list (incl. auth/idempotency/tx/limits) | — |
+| 2 | Gap analysis | `00-gap-analysis.md` — filled grid (mandatory; incl. auth/idempotency/tx/limits) | — |
 | 3 | Gap resolution | `02-resolved-spec.md` | →4 |
 | 4 | **🚪 Gate 1** | user approves resolved-spec | 🔴 |
 | 5 | Design | `03-design.md` (endpoints · schemas · DB · errors) + `05-traceability.md` | 🟠 |
@@ -43,7 +43,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 
 **1 · Ingest & probe** — normalize the spec (any format) into `01-working-spec.md`. Pick a kebab-case `<slug>`; doc home `docs/spec-to-code/<slug>/`; fresh→`v1/`, update→next `v(N+1)/`; archive original to `source/`; create `index.md` + `CHANGELOG.md` (common). Write `.spec-to-code-state.json` (`{"active":true,"slug","tier","mode":"checkpoint","scope":"build","specApproved":false,"designApproved":false,"testsApproved":false,"reviewApproved":false,"gate2Approved":false,"docHome"}`). **Probe:** test runner; **DB / ORM / migration tool**; web framework; existing API conventions. Read & obey the repo's `CLAUDE.md`. Detect mode (fresh/update), tier (full/lite), and **scope** (build / docs-only). Surface open `deferred.md` items. See `references/spec-ingestion.md`, `references/documents.md`.
 
-**2 · Gap analysis** — exhaustive. Beyond the general taxonomy (`references/gap-analysis.md`), backend-specific categories are **mandatory to walk**: authn/authz (who can call this, scopes), input validation & sanitization, **idempotency** (retries/dupes), **transactions & consistency**, **concurrency/locking** (races, lost updates), **rate limits/quotas**, pagination/filtering/sorting contracts, **error model** (status codes + machine codes), data lifecycle (soft delete, retention), audit/logging, external-call failure (timeout/retry/circuit). Fan out with `gap-hunter` for large specs. Apply **branch completeness**: for every condition the spec states (when X → A), resolve its complement (not-X → ?) — the most-missed gap.
+**2 · Gap analysis** — produce `00-gap-analysis.md`: the **mandatory filled grid** (axes → decision table(s)/state×event matrix(es), **every cell decided**, no empty cells). **Unconditional — not gated on spec size**; the hook blocks `02-resolved-spec.md` until `00` exists. Beyond the general taxonomy (`references/gap-analysis.md`), backend-specific categories are **mandatory axes to walk**: authn/authz (who can call this, scopes), input validation & sanitization, **idempotency** (retries/dupes), **transactions & consistency**, **concurrency/locking** (races, lost updates), **rate limits/quotas**, pagination/filtering/sorting contracts, **error model** (status codes + machine codes), data lifecycle (soft delete, retention), audit/logging, external-call failure (timeout/retry/circuit). **Fan-out by a countable trigger, not a judgment call:** ≥2 endpoints/resources/sections OR ≥3 rules/transitions → one `gap-hunter` per section (parallel), merge & dedupe; below threshold inline is fine but the grid is still required. Apply **branch completeness** (every "when X → A" gets its not-X row), then run a **mandatory adversarial completeness critic** (a fresh agent that only hunts empty cells / missing axes / uncomplemented branches).
 
 **3 · Gap resolution** — batch into decision questions; write `02-resolved-spec.md` as answers land. Loop until zero open gaps and every requirement is test-shaped.
 
@@ -53,7 +53,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 
 **6 · 🚪 Tests first (RED)** — write **unit (pure logic) + integration (against a test DB) + API-contract (request→status/shape/error-code)** tests before impl; they must fail for the right reason. Record in `04-test-doc.md`. Hand over design+tests → on approval `testsApproved:true`.
 
-**Scope — `docs` (no implementation):** if the user asked to stop at the docs (e.g. "문서까지만", "구현 하지마", "설계+테스트만", "docs only", "RED까지"), the run **ends here, after the Tests gate**. Deliverable: `02-resolved-spec.md` + `03-design.md` + `04-test-doc.md` + `05-traceability.md`(draft) + the **RED test files** (failing, ready for the next dev to make GREEN). Do **NOT** set `testsApproved` → implementation stays hook-blocked. Record a handoff in `index.md`/`CHANGELOG.md` ("docs complete — implement by making the RED tests pass"), set `active:false`, and stop. The default `build` scope continues below.
+**Scope — `docs` (no implementation):** if the user asked to stop at the docs (e.g. "문서까지만", "구현 하지마", "설계+테스트만", "docs only", "RED까지"), the run **ends here, after the Tests gate**. Deliverable: `00-gap-analysis.md` + `02-resolved-spec.md` + `03-design.md` + `04-test-doc.md` + `05-traceability.md`(draft) + the **RED test files** (failing, ready for the next dev to make GREEN). Do **NOT** set `testsApproved` → implementation stays hook-blocked. Record a handoff in `index.md`/`CHANGELOG.md` ("docs complete — implement by making the RED tests pass"), set `active:false`, and stop. The default `build` scope continues below.
 
 **7–8 · Implement → GREEN** — domain logic until unit tests pass; then API handlers + persistence until integration/contract tests pass. Keep logic separable from framework/IO.
 
@@ -70,6 +70,7 @@ Per-version files in `v<N>/`; common at slug root. Templates + storage: `referen
 
 | File | Purpose |
 |------|---------|
+| `00-gap-analysis.md` | filled grid: axes + decision/state×event tables, no empty cells (Phase 2, **mandatory; hook-gated before 02**) |
 | `01-working-spec.md` | normalized snapshot (diff baseline) |
 | `02-resolved-spec.md` | decisions/cases/edges/errors pinned down |
 | `03-design.md` | endpoints · schemas · DB · error codes · layering |
@@ -83,7 +84,7 @@ Per-version files in `v<N>/`; common at slug root. Templates + storage: `referen
 **No silent drop:** anything blocked/deferred/out-of-scope → `deferred.md` with a revisit trigger the moment it arises; mapped cases get a skipped/pending test + `deferred` traceability row.
 
 ## Enforcement (gate guard)
-Bundled PreToolUse hook (`hooks/gate-guard.mjs`), staged: `designApproved:false` → all code & test edits blocked (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → code/tests allowed; `reviewApproved:false` → **`07-verify.md`/`08-completion.md` writes blocked** (can't pass the Review-loop 🔴 into comprehensive-verify/Gate 2 until the latest round is user-approved). Scoped & fail-open: no active state file → complete no-op; any error allows the edit. Makes "no server code without an approved design" — and "no verify/completion before an approved review round" — impossible to skip silently.
+Bundled PreToolUse hook (`hooks/gate-guard.mjs`), staged: **`02-resolved-spec.md` blocked until `00-gap-analysis.md` exists** in the same `v<N>/` (Phase-2 enumeration precedes the Gate-1 contract; presence-only — completeness is the critic's job); `designApproved:false` → all code & test edits blocked (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → code/tests allowed; `reviewApproved:false` → **`07-verify.md`/`08-completion.md` writes blocked** (can't pass the Review-loop 🔴 into comprehensive-verify/Gate 2 until the latest round is user-approved). Scoped & fail-open: no active state file → complete no-op; any error allows the edit. Makes "no server code without an approved design" — and "no verify/completion before an approved review round" — impossible to skip silently.
 
 ## Guardrails
 - The 🔴 checkpoints are mandatory (hook-enforced); never skip.

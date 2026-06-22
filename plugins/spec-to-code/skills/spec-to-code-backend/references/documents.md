@@ -18,6 +18,7 @@ docs/spec-to-code/<slug>/
 ├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
 ├── deferred.md      COMMON: parking lot (carries across versions, living)
 ├── v1/                fresh run's full artifact set
+│   ├── 00-gap-analysis.md   filled grid (axes + decision/state×event tables) — Phase 2, MANDATORY, hook-gated before 02
 │   ├── 01-working-spec.md   normalized snapshot — the diff baseline for the NEXT version
 │   ├── 02-resolved-spec.md
 │   ├── 03-design.md         the complete dev doc (Phase 5): files, functions, every behavior
@@ -88,6 +89,39 @@ The answer to "what has to be done for this update, and what was done." One entr
 The Tasks list is the literal "to-do for this update." Keep it honest — an unchecked box at Gate 2 means the update isn't complete (or the item moved to F with a reason).
 
 ---
+
+## Gap Analysis (00-gap-analysis.md)
+The **mandatory** Phase-2 grid, written **before** the resolved spec (the hook blocks `02` until this exists). Its job: turn "did we think of every case?" into "is any cell empty?". Not gated on spec size.
+
+```markdown
+# Gap Analysis — <feature>
+slug: <slug>   phase: 2   fan-out: <ran N gap-hunters per endpoint/section | inline (below threshold)>
+
+## Axes (the variables enumerated)
+- request inputs/params/body (equivalence classes + boundaries) · auth/roles/scopes
+- resource & DB states (absent/exists/stale/locked) · downstream outcomes (ok/empty/error/timeout/partial)
+- concurrency (retry/idempotency/race) · rate-limits · error model (status + machine codes) · data lifecycle
+
+## Decision table(s)
+| <condition A> | <condition B> | … | → response / status / effect |
+|---|---|---|---|
+| … | … | | <decided behavior, or **GAP→Q#**> |
+
+## State × event matrix
+| state \ event | <ev1> | <ev2> | … |
+|---|---|---|---|
+| <state1> | <next/effect> | <next/effect> | |
+
+## Branch-complement checklist (every "when X" → its "not-X")
+- [x] when X → A · NOT-X → <decided / GAP→Q#>
+
+## Adversarial completeness critic
+- ran: <yes>  ·  findings: <empty cells / missing axes / uncomplemented branches> → folded in / parked (F#)
+
+## Open gaps → Gate-1 questions
+- Q1 (<axis/cell>, severity): <question>
+```
+**Exit:** zero empty cells (each a decision or flagged GAP), critic run, every branch complemented, every resolved item test-shaped. These open Q's flow into the resolved spec's Decisions table.
 
 ## Resolved Spec (02-resolved-spec.md)
 The contract. Every gap from Phase 2, with the user's decision. This — not the original spec — is what the code implements.

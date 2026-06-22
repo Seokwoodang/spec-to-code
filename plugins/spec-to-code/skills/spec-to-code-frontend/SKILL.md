@@ -24,7 +24,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 | # | Phase | Output | Stop |
 |---|-------|--------|------|
 | 1 | Ingest & probe | working spec + env facts + mode/tier | — |
-| 2 | Gap analysis | exhaustive gap list | — |
+| 2 | Gap analysis | `00-gap-analysis.md` — filled grid (mandatory) | — |
 | 3 | Gap resolution | `02-resolved-spec.md` | →4 |
 | 4 | **🚪 Gate 1** | user approves resolved-spec | 🔴 |
 | 5 | Design | `03-design.md` + `05-traceability.md`(draft) | 🟠 |
@@ -50,7 +50,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 - **Deferred check:** if `deferred.md` has open items, **surface them and ask which to take on now** before proceeding (every resume, any mode).
 - **Tier:** quick gap scan → **lite** for small low-risk changes, else **full** (`references/lite-mode.md`). Lite collapses to 4 steps / 1 gate / one CHANGELOG entry but keeps the safety core; escalates to full on any blocker. The rest of this doc is **full** build scope; if the user wants docs only (no implementation), see the `docs` scope note before Phase 7.
 
-**2 · Gap analysis** — enumerate everything needed for *complete* code the spec doesn't pin down; be exhaustive. Taxonomy + questioning: `references/gap-analysis.md`. Large spec → fan out reading with the `gap-hunter` agent (else `Explore`/inline). Apply **branch completeness**: for every condition the spec states (when X → A), resolve its complement (not-X → ?) — the most-missed gap.
+**2 · Gap analysis** — produce `00-gap-analysis.md`: the **mandatory filled grid** (axes list → decision table(s)/state×event matrix(es) with **every cell decided**, no empty cells). This is **unconditional — not gated on spec size**; "looks well-defined" is not grounds to skip (the hook blocks `02-resolved-spec.md` until `00` exists). **Fan-out by a countable trigger, not a judgment call:** ≥2 screens/sections OR ≥3 stateful conditionals → spawn one `gap-hunter` per section (parallel), merge & dedupe; below the threshold inline is fine but the grid is still required. Apply **branch completeness** (every "when X → A" gets its not-X row) and then run a **mandatory adversarial completeness critic** (a fresh agent whose only job is to find an empty cell / missing axis / uncomplemented branch). Taxonomy, trigger, critic, exit checklist: `references/gap-analysis.md`.
 
 **3 · Gap resolution** — batch gaps into a few decision questions (`AskUserQuestion` for crisp choices). Write `02-resolved-spec.md` as answers land. Loop until zero open gaps and every requirement is test-shaped.
 
@@ -60,7 +60,7 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 
 **6 · 🚪 Tests first (RED)** — write logic + UI-behavior tests before impl; they must fail for the right reason (a test that can't be written → back to Phase 3). Record in `04-test-doc.md`. Hand over design+tests → on approval set `testsApproved:true` (unblocks impl).
 
-**Scope — `docs` (no implementation):** if the user asked to stop at the docs (e.g. "문서까지만", "구현 하지마", "설계+테스트만", "docs only", "RED까지"), the run **ends here, after the Tests gate**. Deliverable: `02-resolved-spec.md` + `03-design.md` + `04-test-doc.md` + `05-traceability.md`(draft) + the **RED test files** (failing, ready for the next dev to make GREEN). Do **NOT** set `testsApproved` → implementation stays hook-blocked. Record a handoff in `index.md`/`CHANGELOG.md` ("docs complete — implement by making the RED tests pass"), set `active:false`, and stop. The default `build` scope continues below.
+**Scope — `docs` (no implementation):** if the user asked to stop at the docs (e.g. "문서까지만", "구현 하지마", "설계+테스트만", "docs only", "RED까지"), the run **ends here, after the Tests gate**. Deliverable: `00-gap-analysis.md` + `02-resolved-spec.md` + `03-design.md` + `04-test-doc.md` + `05-traceability.md`(draft) + the **RED test files** (failing, ready for the next dev to make GREEN). Do **NOT** set `testsApproved` → implementation stays hook-blocked. Record a handoff in `index.md`/`CHANGELOG.md` ("docs complete — implement by making the RED tests pass"), set `active:false`, and stop. The default `build` scope continues below.
 
 **7–8 · Implement → GREEN** — logic until logic tests pass; then thin UI over tested logic. Keep the split.
 
@@ -77,6 +77,7 @@ Per-version files in `v<N>/`; common files at slug root. Each gate hands one ove
 
 | File | Purpose | Gate |
 |------|---------|------|
+| `00-gap-analysis.md` | filled grid: axes + decision/state×event tables, no empty cells (Phase 2, **mandatory**) | — (hook-gated before 02) |
 | `01-working-spec.md` | normalized snapshot (diff baseline) | — |
 | `02-resolved-spec.md` | decisions/cases/edges/errors pinned down | Gate 1 |
 | `03-design.md` | complete dev doc — files, functions, behavior | Tests gate |
@@ -91,7 +92,7 @@ Per-version files in `v<N>/`; common files at slug root. Each gate hands one ove
 **No silent drop:** anything that can't be done now (deferred gap, `defer`-dispositioned finding, backend-blocked work, out-of-scope) goes to `deferred.md` with a concrete revisit trigger the moment it arises. If it maps to a spec-case, its test is skipped/pending (reason → deferred id) and its traceability row marked `deferred` — never quietly passed or blank.
 
 ## Enforcement (gate guard)
-A bundled PreToolUse hook (`hooks/gate-guard.mjs`) makes the gates structural, in stages: `designApproved:false` → **all code & test edits blocked** (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → code/tests allowed; `reviewApproved:false` → **`07-verify.md`/`08-completion.md` writes blocked** (can't advance past the Review-loop 🔴 into comprehensive-verify/Gate 2 until the latest review round is user-approved). **Scoped & fail-open**: with no active state file it's a complete no-op (never touches ordinary work elsewhere); any error allows the edit. This makes "no code without an approved design" — and "no verify/completion before an approved review round" — impossible to skip silently.
+A bundled PreToolUse hook (`hooks/gate-guard.mjs`) makes the gates structural, in stages: **`02-resolved-spec.md` blocked until `00-gap-analysis.md` exists** in the same `v<N>/` (Phase-2 enumeration can't be skipped on the way to the Gate-1 contract; presence-only — completeness is the critic's job); `designApproved:false` → **all code & test edits blocked** (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → code/tests allowed; `reviewApproved:false` → **`07-verify.md`/`08-completion.md` writes blocked** (can't advance past the Review-loop 🔴 into comprehensive-verify/Gate 2 until the latest review round is user-approved). **Scoped & fail-open**: with no active state file it's a complete no-op (never touches ordinary work elsewhere); any error allows the edit. This makes "no code without an approved design" — and "no verify/completion before an approved review round" — impossible to skip silently.
 
 ## Guardrails
 - The 🔴 checkpoints are mandatory (and hook-enforced); never skip to "save time."

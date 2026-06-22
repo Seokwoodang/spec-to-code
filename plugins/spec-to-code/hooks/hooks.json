@@ -1,5 +1,5 @@
 {
-  "description": "spec-to-code gate guard — blocks code/test edits while a run is active but its gate is unapproved. No-op unless a .spec-to-code-state.json marks an active flow.",
+  "description": "spec-to-code gate guard — blocks code/test edits while a run is active but its gate is unapproved, and blocks 07-verify.md/08-completion.md until the latest review round is approved (reviewApproved). No-op unless a .spec-to-code-state.json marks an active flow.",
   "hooks": {
     "PreToolUse": [
       {

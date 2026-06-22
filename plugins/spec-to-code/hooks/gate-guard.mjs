@@ -1,12 +1,16 @@
 #!/usr/bin/env node
 // spec-to-code gate guard (PreToolUse: Edit|Write|MultiEdit)
 //
-// Staged enforcement — blocks code/test edits until the required gate docs are
-// approved. Stages (in .spec-to-code-state.json):
+// Staged enforcement — blocks edits until the required gate docs are approved.
+// Stages (in .spec-to-code-state.json):
 //   designApproved=false → block ALL code & test files (only docs editable)
 //   designApproved=true, testsApproved=false → allow TEST files, block impl files
-//   testsApproved=true → allow all
-// Always allows: the state file, the doc home, .claude/. Fail OPEN on any error.
+//   testsApproved=true → code/tests allowed
+//   reviewApproved=false → block writing 07-verify.md / 08-completion.md
+//                          (can't advance to comprehensive-verify / Gate 2 until the
+//                           latest review round is approved by the user)
+// Always allows: the state file, the doc home (except the two review-gated docs),
+// .claude/. Fail OPEN on any error.
 import { readFileSync, existsSync } from 'node:fs'
 import { dirname, resolve, join, sep, basename } from 'node:path'
 
@@ -44,10 +48,29 @@ try {
 
   const root = dirname(statePath)
   if (targetAbs === resolve(root, '.spec-to-code-state.json')) process.exit(0)
-  if (within(targetAbs, resolve(root, state.docHome || 'docs/spec-to-code'))) process.exit(0)
   if (within(targetAbs, resolve(root, '.claude'))) process.exit(0)
 
   const docHome = state.docHome || 'docs/spec-to-code/<slug>'
+  const inDocHome = within(targetAbs, resolve(root, state.docHome || 'docs/spec-to-code'))
+
+  // Stage 3: the comprehensive-verify (07) and completion (08) docs are the artifacts
+  // that move the flow PAST the review loop. Block them until the latest review round
+  // is approved — otherwise the run can silently skip the Review-loop 🔴 stop.
+  const isReviewGatedDoc = /^0?7-verify\.md$/i.test(basename(targetAbs)) ||
+                           /^0?8-completion\.md$/i.test(basename(targetAbs))
+  if (inDocHome && isReviewGatedDoc && !state.reviewApproved) {
+    process.stderr.write(
+      `⛔ spec-to-code: '${state.slug || '?'}' — the latest REVIEW round is NOT approved yet.\n` +
+      `The review loop is a hard stop: run an independent reviewer, write ${docHome}/v<N>/06-review/r<k>.md, ` +
+      `let the USER disposition each finding and approve the round (note: "fix all" is a disposition, NOT round approval). ` +
+      `Only then set reviewApproved=true in .spec-to-code-state.json — and only then write 07-verify.md / 08-completion.md.\n`
+    )
+    process.exit(2)
+  }
+
+  // All other doc-home writes are always allowed (specs, design, tests doc, reviews…).
+  if (inDocHome) process.exit(0)
+
   // Stage 1: design (and the spec it builds on) must be approved before ANY code/test.
   if (!state.designApproved) {
     process.stderr.write(

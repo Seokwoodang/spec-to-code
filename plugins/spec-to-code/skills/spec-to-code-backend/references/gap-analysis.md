@@ -43,6 +43,17 @@ Walk the spec against each category. A category with no gap is fine — record i
 - Two parts of the spec that conflict. Terms used loosely ("fast", "recent", "some"). Pronouns/references with unclear antecedent.
 - Implicit assumptions ("the user is logged in") never stated.
 
+## ⭐ Branch / complement completeness — the most-missed gap
+
+A spec almost always states the **positive** case ("when X, the button goes to **A**") and leaves the **complement** unstated. AI then codes only the named branch and silently drops "when **NOT X** → where?". Catch this *systematically*, never by luck:
+
+- **For every conditional the spec states** ("when X → A", "if logged in → …", "on success → …", "for admins → …"), generate a **mandatory question for its complement**: not-X / failure / the other roles / the other states → **what exactly?**
+- **Enumerate every branch of every decision**, not just the one named. A condition with N outcomes needs N answers; a boolean needs **both**; a switch needs the **default**.
+- The **else / default is never assumed** — it is a decision the user makes (go to B? stay? error? no-op?).
+- **Test rule:** each branch **including the complement** is its own test case. A "when X → A" test with no "when not-X → ?" test is a **visible hole** in the traceability matrix — surface it, don't pass it.
+
+This is the concrete net for "AI implemented the `if` but not the `else`."
+
 ## Severity tagging
 
 Tag each gap so questioning can prioritize and so trivial items don't drown the user:

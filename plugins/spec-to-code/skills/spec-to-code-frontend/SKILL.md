@@ -44,13 +44,13 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 **1 · Ingest & probe**
 - **Normalize** the spec (any format) into one `01-working-spec.md`; capture *visual notes* for UI sources. A completed/static HTML is both visual spec and reusable markup. See `references/spec-ingestion.md`.
 - **Identity & layout:** pick a stable kebab-case `<slug>` (confirm). Doc home = `docs/spec-to-code/<slug>/` (or match repo convention). Fresh → `v1/`; update → next `v(N+1)/`. Archive the original verbatim to `source/`; save `01-working-spec.md` in `v<N>/`; create/update `index.md` + a `CHANGELOG.md` entry (COMMON, at slug root). Storage rules: `references/documents.md`.
-- **Gate-guard state:** write `.spec-to-code-state.json` at project root: `{"active":true,"slug":"<slug>","tier":"full|lite","mode":"checkpoint","specApproved":false,"designApproved":false,"testsApproved":false,"docHome":"docs/spec-to-code/<slug>"}`.
+- **Gate-guard state:** write `.spec-to-code-state.json` at project root: `{"active":true,"slug":"<slug>","tier":"full|lite","mode":"checkpoint","specApproved":false,"designApproved":false,"testsApproved":false,"reviewApproved":false,"gate2Approved":false,"docHome":"docs/spec-to-code/<slug>"}`.
 - **Probe** (detect, don't assume): test runner; UI vs CLI/library (decides UI layers); Playwright (offer to add if UI present & absent — never install silently). **Read & obey the repo's `CLAUDE.md`** (esp. no-commit-without-instruction).
 - **Mode:** a matching `v*/01-working-spec.md` + `v*/02-resolved-spec.md` exists → **UPDATE** (`references/spec-update.md`: diff vs latest `vN`, impact-analyze, delta TDD, **regression**). Else **FRESH**. Ambiguous slug → ask, don't guess.
 - **Deferred check:** if `deferred.md` has open items, **surface them and ask which to take on now** before proceeding (every resume, any mode).
 - **Tier:** quick gap scan → **lite** for small low-risk changes, else **full** (`references/lite-mode.md`). Lite collapses to 4 steps / 1 gate / one CHANGELOG entry but keeps the safety core; escalates to full on any blocker. The rest of this doc is **full**.
 
-**2 · Gap analysis** — enumerate everything needed for *complete* code the spec doesn't pin down; be exhaustive. Taxonomy + questioning: `references/gap-analysis.md`. Large spec → fan out reading with the `gap-hunter` agent (else `Explore`/inline).
+**2 · Gap analysis** — enumerate everything needed for *complete* code the spec doesn't pin down; be exhaustive. Taxonomy + questioning: `references/gap-analysis.md`. Large spec → fan out reading with the `gap-hunter` agent (else `Explore`/inline). Apply **branch completeness**: for every condition the spec states (when X → A), resolve its complement (not-X → ?) — the most-missed gap.
 
 **3 · Gap resolution** — batch gaps into a few decision questions (`AskUserQuestion` for crisp choices). Write `02-resolved-spec.md` as answers land. Loop until zero open gaps and every requirement is test-shaped.
 
@@ -64,11 +64,11 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 
 **9 · Visual verify** 🟠 — for UIs, capture Playwright screenshots per state (baseline candidates, blessed at Gate 2). `references/verification.md`.
 
-**10 · 🔁 Review loop** — spawn an **independent reviewer** (`code-reviewer` agent; else fresh `general-purpose`/`claude`): fresh context, sees only current diff + resolved spec, **never the author**. PR-grade findings (severity · file:line · snippet · why · fix-as-code) → write to a **new** `06-review/r<k>.md` → hand over → user dispositions each (fix/defer/reject) → apply fixes → **re-run on updated code as `r<k+1>.md`**. Repeat until no open blocker/major **and** user approves. Never self-reviewed, never self-dispositioned.
+**10 · 🔁 Review loop** — spawn an **independent reviewer** (`code-reviewer` agent; else fresh `general-purpose`/`claude`): fresh context, sees only current diff + resolved spec, **never the author**. PR-grade findings (severity · file:line · snippet · why · fix-as-code) → write to a **new** `06-review/r<k>.md` → hand over → user dispositions each (fix/defer/reject) → apply fixes → **re-run on updated code as `r<k+1>.md`**. Repeat until no open blocker/major **and** the user approves the latest round; **only then set `reviewApproved:true`**. A "fix all" / per-finding disposition is **NOT** round approval — fixing and re-reviewing still requires the user's explicit OK on the resulting round before advancing. The hook blocks `07-verify.md`/`08-completion.md` until this flag is set, so you cannot silently skip this 🔴. Never self-reviewed, never self-dispositioned.
 
 **11 · Comprehensive verify** — full suite + audit (conformance, traceability filled, logic/UI separation); the `spec-verifier` agent / `scripts/verify-workflow.js` for fan-out. Write `07-verify.md`.
 
-**12 · 🚪 Gate 2** — compile `08-completion.md` + verify + filled traceability + reviews + `deferred.md` + screenshots; report; surface open deferred items. On approval set `active:false`. Never commit unless told.
+**12 · 🚪 Gate 2** — compile `08-completion.md` + verify + filled traceability + reviews + `deferred.md` + screenshots; report; surface open deferred items. On approval set `gate2Approved:true` then `active:false`. Never commit unless told.
 
 ## Artifacts
 Per-version files in `v<N>/`; common files at slug root. Each gate hands one over. Templates + storage rules: `references/documents.md`.
@@ -89,7 +89,7 @@ Per-version files in `v<N>/`; common files at slug root. Each gate hands one ove
 **No silent drop:** anything that can't be done now (deferred gap, `defer`-dispositioned finding, backend-blocked work, out-of-scope) goes to `deferred.md` with a concrete revisit trigger the moment it arises. If it maps to a spec-case, its test is skipped/pending (reason → deferred id) and its traceability row marked `deferred` — never quietly passed or blank.
 
 ## Enforcement (gate guard)
-A bundled PreToolUse hook (`hooks/gate-guard.mjs`) makes the gates structural, in stages: `designApproved:false` → **all code & test edits blocked** (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → all allowed. **Scoped & fail-open**: with no active state file it's a complete no-op (never touches ordinary work elsewhere); any error allows the edit. This makes "no code without an approved design" impossible to skip.
+A bundled PreToolUse hook (`hooks/gate-guard.mjs`) makes the gates structural, in stages: `designApproved:false` → **all code & test edits blocked** (only doc home + state file writable); `designApproved:true, testsApproved:false` → tests allowed, **impl blocked**; `testsApproved:true` → code/tests allowed; `reviewApproved:false` → **`07-verify.md`/`08-completion.md` writes blocked** (can't advance past the Review-loop 🔴 into comprehensive-verify/Gate 2 until the latest review round is user-approved). **Scoped & fail-open**: with no active state file it's a complete no-op (never touches ordinary work elsewhere); any error allows the edit. This makes "no code without an approved design" — and "no verify/completion before an approved review round" — impossible to skip silently.
 
 ## Guardrails
 - The 🔴 checkpoints are mandatory (and hook-enforced); never skip to "save time."

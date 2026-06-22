@@ -44,11 +44,11 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 **1 · Ingest & probe**
 - **Normalize** the spec (any format) into one `01-working-spec.md`; capture *visual notes* for UI sources. A completed/static HTML is both visual spec and reusable markup. See `references/spec-ingestion.md`.
 - **Identity & layout:** pick a stable kebab-case `<slug>` (confirm). Doc home = `docs/spec-to-code/<slug>/` (or match repo convention). Fresh → `v1/`; update → next `v(N+1)/`. Archive the original verbatim to `source/`; save `01-working-spec.md` in `v<N>/`; create/update `index.md` + a `CHANGELOG.md` entry (COMMON, at slug root). Storage rules: `references/documents.md`.
-- **Gate-guard state:** write `.spec-to-code-state.json` at project root: `{"active":true,"slug":"<slug>","tier":"full|lite","mode":"checkpoint","specApproved":false,"designApproved":false,"testsApproved":false,"reviewApproved":false,"gate2Approved":false,"docHome":"docs/spec-to-code/<slug>"}`.
+- **Gate-guard state:** write `.spec-to-code-state.json` at project root: `{"active":true,"slug":"<slug>","tier":"full|lite","mode":"checkpoint","scope":"build","specApproved":false,"designApproved":false,"testsApproved":false,"reviewApproved":false,"gate2Approved":false,"docHome":"docs/spec-to-code/<slug>"}`.
 - **Probe** (detect, don't assume): test runner; UI vs CLI/library (decides UI layers); Playwright (offer to add if UI present & absent — never install silently). **Read & obey the repo's `CLAUDE.md`** (esp. no-commit-without-instruction).
 - **Mode:** a matching `v*/01-working-spec.md` + `v*/02-resolved-spec.md` exists → **UPDATE** (`references/spec-update.md`: diff vs latest `vN`, impact-analyze, delta TDD, **regression**). Else **FRESH**. Ambiguous slug → ask, don't guess.
 - **Deferred check:** if `deferred.md` has open items, **surface them and ask which to take on now** before proceeding (every resume, any mode).
-- **Tier:** quick gap scan → **lite** for small low-risk changes, else **full** (`references/lite-mode.md`). Lite collapses to 4 steps / 1 gate / one CHANGELOG entry but keeps the safety core; escalates to full on any blocker. The rest of this doc is **full**.
+- **Tier:** quick gap scan → **lite** for small low-risk changes, else **full** (`references/lite-mode.md`). Lite collapses to 4 steps / 1 gate / one CHANGELOG entry but keeps the safety core; escalates to full on any blocker. The rest of this doc is **full** build scope; if the user wants docs only (no implementation), see the `docs` scope note before Phase 7.
 
 **2 · Gap analysis** — enumerate everything needed for *complete* code the spec doesn't pin down; be exhaustive. Taxonomy + questioning: `references/gap-analysis.md`. Large spec → fan out reading with the `gap-hunter` agent (else `Explore`/inline). Apply **branch completeness**: for every condition the spec states (when X → A), resolve its complement (not-X → ?) — the most-missed gap.
 
@@ -59,6 +59,8 @@ Stop: 🔴 = hard stop (both modes) · 🟠/🟡 = stop only in step-through · 
 **5 · Design** 🟠 — write `03-design.md`, **the complete dev doc**: approach, logic/UI split, **every file+path**, types, **full function list w/ signatures**, an **exhaustive behavior spec** (every interaction branch, state, transition, edge, error), integration points; if HTML was input, how it decomposes into components. Draft `05-traceability.md` (`TODO` rows). Hand over → on approval set `designApproved:true` (unblocks tests). Mandatory & hook-enforced.
 
 **6 · 🚪 Tests first (RED)** — write logic + UI-behavior tests before impl; they must fail for the right reason (a test that can't be written → back to Phase 3). Record in `04-test-doc.md`. Hand over design+tests → on approval set `testsApproved:true` (unblocks impl).
+
+**Scope — `docs` (no implementation):** if the user asked to stop at the docs (e.g. "문서까지만", "구현 하지마", "설계+테스트만", "docs only", "RED까지"), the run **ends here, after the Tests gate**. Deliverable: `02-resolved-spec.md` + `03-design.md` + `04-test-doc.md` + `05-traceability.md`(draft) + the **RED test files** (failing, ready for the next dev to make GREEN). Do **NOT** set `testsApproved` → implementation stays hook-blocked. Record a handoff in `index.md`/`CHANGELOG.md` ("docs complete — implement by making the RED tests pass"), set `active:false`, and stop. The default `build` scope continues below.
 
 **7–8 · Implement → GREEN** — logic until logic tests pass; then thin UI over tested logic. Keep the split.
 

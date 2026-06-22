@@ -1,7 +1,7 @@
 {
   "name": "spec-to-code",
   "description": "Three specialized, gated TDD skills — spec-to-code-frontend (UI: Playwright/screenshots), spec-to-code-backend (API/DB: integration/contract tests), and spec-to-code-fullstack (thin orchestrator) — that turn an incomplete spec into complete, verified code: find gaps, resolve with the user before any code, prove with tests/review/docs.",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "author": {
     "name": "Seokwoo Kang",
     "email": "swkang@parametacorp.com"

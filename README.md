@@ -30,25 +30,30 @@
 
 ## 동작 방식
 
+아래 흐름은 **frontend·backend 공통(12 페이즈 척추)** 입니다. **fullstack은 다름** — 12페이즈를 직접 돌지 않고 *API 계약 합의 → backend 실행 → frontend 실행* 으로 두 스킬을 조율합니다.
+
 ```mermaid
 flowchart TD
-  S([기획서 · 어떤 포맷이든]) --> P1[Ingest & probe]
-  P1 --> P2[갭 분석]
-  P2 --> G1{{🚪 Gate 1 · 확정명세 승인}}
-  G1 --> P5[설계 doc]
-  P5 --> G2{{🚪 Tests gate · 설계+RED테스트 승인}}
-  G2 --> P7[구현 → GREEN]
-  P7 --> R[독립 리뷰어]
+  S([기획서 · 어떤 포맷이든]) --> P1[1·2 Ingest·probe·갭분석]
+  P1 --> P3[3 갭 해소]
+  P3 --> G1{{🚪 4 Gate 1 · 확정명세 승인}}
+  G1 --> P5[5 설계 doc]
+  P5 --> G2{{🚪 6 Tests gate · 설계+RED테스트 승인}}
+  G2 --> P7[7·8 구현 → GREEN]
+  P7 --> P9[9 검증<br/>FE 스크린샷 / BE 통합·계약]
+  P9 --> R[10 독립 리뷰어]
   R --> G3{{🔁 사용자 처분}}
   G3 -->|open 남으면| R
-  G3 --> P11[종합 검증]
-  P11 --> G4{{🚪 Gate 2 · 완료 승인}}
+  G3 --> P11[11 종합 검증]
+  P11 --> G4{{🚪 12 Gate 2 · 완료 승인}}
   G4 --> DONE([✅ 완료])
   G1 -.보류.-> F[(deferred · TODO)]
   G3 -.보류.-> F
   classDef gate fill:#1f6feb,color:#fff,stroke:#1f6feb;
   class G1,G2,G3,G4 gate;
 ```
+
+**12 페이즈** (🚪=하드스톱): 1 Ingest&probe → 2 갭 분석 → 3 갭 해소 → 🚪**4 Gate 1**(확정명세) → 5 설계 → 🚪**6 Tests gate**(RED, 구현 전) → 7·8 구현(GREEN) → 9 검증(FE 스크린샷 / BE 통합·계약) → 🔁**10 리뷰 루프** → 11 종합 검증 → 🚪**12 Gate 2**(완료).
 
 - **갭은 사용자가 결정** — 추론하지 않고 묻는다. 테스트로 못 쓸 만큼 모호하면 그것도 갭.
 - **게이트는 문서로** — 각 하드스톱마다 MD 파일을 만들어 경로를 주고, 당신이 읽고 승인/수정. 채팅 표 아님.

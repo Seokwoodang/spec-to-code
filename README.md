@@ -120,7 +120,7 @@ docs/spec-to-code/<slug>/
 .claude-plugin/marketplace.json
 plugins/spec-to-code/
 ├── .claude-plugin/plugin.json
-├── commands/        spec-to-code(-frontend/-backend/-fullstack).md
+├── commands/        spec-to-code.md  (frontend 별칭; -backend/-fullstack은 스킬로 호출)
 ├── agents/          gap-hunter · code-reviewer · spec-verifier  (읽기전용)
 ├── hooks/           gate-guard.mjs  (게이트 강제)
 └── skills/          spec-to-code-{frontend,backend,fullstack}/

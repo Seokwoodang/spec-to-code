@@ -9,14 +9,15 @@ After normalizing the spec/change, run a **quick gap scan** — inline, not the 
 - The user may request lite explicitly ("가볍게 가자", "버튼 하나니까"). Honor it — **unless the scan finds a blocker or hidden complexity**, in which case escalate (below). Never take "it's small" purely at face value; the quick scan is what confirms it.
 
 ## The lite path (L1–L4)
-- **L1 — Ingest & quick scan.** Normalize the spec, archive the original (`source/`), detect mode (fresh/update), surface open `F` items, run the quick scan → decide tier. Write `.spec-to-code-state.json` with `tier:"lite"`, `designApproved:false`, `testsApproved:false` (the gate guard blocks code/test edits until L2). (Same Phase-1 essentials, minus the exhaustive gap fan-out.)
+- **L1 — Ingest & quick scan.** Normalize the spec, archive the original (`source/`), detect mode (fresh/update), surface open `F` items, run the quick scan → decide tier. Write `.spec-to-code-state.json` with `tier:"lite"`, `designApproved:false`, `testsApproved:false` (the gate guard blocks code/test edits until L2). Still produce a **reduced `00-gap-analysis.md`** — the change's axes + its handful of cells (classes/boundaries/complements/outcomes), every cell decided. (Lite drops the *fan-out* and the critic, **not** the grid — enumerating the small change's branches is cheap and catches the if-without-else.)
 - **L2 — Resolve + confirm (single gate).** Ask the few real gaps (still the user's call — no inventing). Record the decisions + a brief **design note** (files/functions/behavior, scaled to the change) + a **task checklist** in a `CHANGELOG.md` entry. User confirms before any code on the doc; **on confirm set `specApproved`/`designApproved`/`testsApproved` all true** (unblocks code). This one gate replaces the full-tier gates — lite folds design+tests approval into it, but still on a document the user reads.
 - **L3 — Test-first + implement.** Write test(s) for the changed behavior (RED → GREEN), keep the logic/UI split. If this is an update, run the **full prior suite as a regression guard**.
 - **L4 — Quick review + done.** One inline code-review pass (loop only if it surfaces something real). Tick off the CHANGELOG tasks, record the regression result, brief report. User signs off; set `active:false` in the state file. Commit only if told. This replaces the review loop + comprehensive verify + Gate 2.
 
 ## Safety core — never dropped, even in lite
 - **gaps resolved by the user** (no invented behavior);
-- **test-first** for the changed behavior;
+- **the filled grid** (reduced `00-gap-analysis.md`) — enumeration is unconditional; only the fan-out/critic are dropped;
+- **test-first per cell** for the changed behavior (one test per class/boundary/complement, not one lump);
 - **regression** on updates;
 - **original archived**, mode detected, **deferred (F) items surfaced and re-asked**;
 - **never commit unprompted**.
@@ -24,7 +25,7 @@ After normalizing the spec/change, run a **quick gap scan** — inline, not the 
 ## What lite collapses or drops
 | | full | lite |
 |---|---|---|
-| gap analysis | exhaustive `gap-hunter` fan-out | inline quick scan |
+| gap analysis | exhaustive `gap-hunter` fan-out + critic | inline quick scan + **reduced grid** (`00-gap-analysis.md`); fan-out/critic dropped |
 | artifacts | A/B/C/D/E/F + index/working-spec/CHANGELOG/source | **one CHANGELOG entry** (decisions + inline test table + regression) + index/working-spec/source |
 | gates | 3 (Gate 1, review loop, Gate 2) | **1** confirm (at L2) |
 | code review | iterative loop + `spec-verifier` fan-out | inline single pass |

@@ -107,10 +107,12 @@ flowchart TD
 ```
 docs/spec-to-code/<slug>/
 ├── index.md · CHANGELOG.md · deferred.md(TODO) · source/   # 공통
-└── v1/  01-working-spec · 02-resolved-spec · 03-design · 04-test-doc
-       05-traceability · 06-review/ · 07-verify · 08-completion
+└── v1/  00-gap-analysis · 01-working-spec · 02-resolved-spec · 03-design
+       04-test-doc · 05-traceability · 06-review/ · 07-verify · 08-completion
 ```
 코드·테스트는 doc home이 아니라 프로젝트 자체 위치에. 업데이트는 `v2/` 생성 후 직전 버전과 diff.
+
+> **`00-gap-analysis.md` 는 필수다.** Phase 2에서 축을 나열하고 결정표/상태×이벤트 매트릭스를 **빈 칸 없이** 채운 뒤에야 `02-resolved-spec.md` 를 쓸 수 있다(hook이 강제). 멀티스크린/멀티엔드포인트면 `gap-hunter` 팬아웃 + 적대적 크리틱이 필수. 테스트는 케이스가 아니라 **격자 셀(등가 클래스·경계·보완)마다 1개**로 만들어, 추적성·종합검증이 "모든 셀 → 케이스 → 테스트"를 확인한다.
 
 📖 **실제 런 예시**: [`examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드 전 과정.
 

@@ -97,10 +97,16 @@ The **mandatory** Phase-2 grid, written **before** the resolved spec (the hook b
 # Gap Analysis — <feature>
 slug: <slug>   phase: 2   fan-out: <ran N gap-hunters per endpoint/section | inline (below threshold)>
 
-## Axes (the variables enumerated)
-- request inputs/params/body (equivalence classes + boundaries) · auth/roles/scopes
-- resource & DB states (absent/exists/stale/locked) · downstream outcomes (ok/empty/error/timeout/partial)
-- concurrency (retry/idempotency/race) · rate-limits · error model (status + machine codes) · data lifecycle
+## Axis checklist (every axis explicitly TICKED or marked N/A — forces recall of the one thing the grid can't: a forgotten axis)
+- [ ] request inputs/params/body + boundaries (empty/min/max/over-max/malformed/unicode/very-long)
+- [ ] auth / roles / scopes (and unauthenticated/forbidden)
+- [ ] resource & DB states (absent/exists/stale/locked/soft-deleted)
+- [ ] downstream-call outcomes (ok/empty/error/timeout/partial)
+- [ ] concurrency (retry, idempotency/dupes, race, lost update)
+- [ ] rate limits / quotas  ·  [ ] pagination/filter/sort contracts
+- [ ] error model (status codes + machine codes)  ·  [ ] data lifecycle (retention, soft delete)
+- [ ] audit / logging  ·  [ ] performance limits  ·  [ ] feature flags
+> Any box left unticked without an explicit N·A is itself a gap. The grid below enumerates combinations *within* these ticked axes.
 
 ## Decision table(s)
 | <condition A> | <condition B> | … | → response / status / effect |
@@ -197,15 +203,18 @@ The detail bar: button behavior, file paths, function list, state machine, error
 ## Test Doc (04-test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
+**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-gap-analysis.md` (each equivalence class, boundary, branch-complement, and external/DB outcome), NOT the prose case. A case that bundles several classes needs **one test per class**; collapsing them is how coverage silently thins. Cite the originating cell. Boundaries (empty/min/max/over-max/malformed/unicode), each complement, each downstream outcome (ok/empty/error/timeout/partial), and auth/role variants are **separate rows — one assertion each**.
+
 ```markdown
 # Test Doc — <feature>
 
 ## Plan
-| TID | Case (from A) | Layer (logic/ui-behavior/appearance) | Given/When/Then |
-|-----|---------------|--------------------------------------|-----------------|
-| T1  | C1 | logic | given empty cart, when add item, then total = price |
-| T2  | C3 | ui-behavior | given error state, when render, then banner visible |
-| T3  | C5 | appearance | loaded list matches baseline |
+| TID | Cell (00-grid) | Case (A) | Layer (logic/integration/contract/db) | Given/When/Then |
+|-----|----------------|----------|---------------------------------------|-----------------|
+| T1  | create·valid | C1 | integration | given valid body, when POST, then 201 + row created |
+| T2  | create·dup-key | C2 | integration | given existing key, when POST, then 409 (idempotent) |
+| T3  | create·unauthenticated | C3 | contract | given no token, when POST, then 401 |
+| T4  | create·db-timeout | C4 | integration | given DB timeout, then 503 + no partial write |
 
 ## Report  (appended P10)
 - Runner: <vitest x.y>  |  E2E: <playwright x.y>
@@ -221,18 +230,18 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 ---
 
 ## Traceability Matrix (05-traceability.md)
-The coverage proof — one row per spec case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. An empty cell means unfinished work; never hide one.
+The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
 
 ```markdown
 # Traceability — <feature>
-| Case (A) | Test(s) (D) | Code unit | Status |
-|----------|-------------|-----------|--------|
-| C1 | T1 | cart.addItem() @ lib/cart.ts | ✅ |
-| C2 | T4 | cart.removeItem() | ✅ |
-| C3 | T2 | <ErrorBanner> | ✅ |
-| C4 | — | — | ⚠️ TODO |
+| Cell (00-grid) | Case (A) | Test(s) (D) | Code unit | Status |
+|----------------|----------|-------------|-----------|--------|
+| create·valid | C1 | T1 | createOrder() @ svc/order.ts | ✅ |
+| create·dup-key | C2 | T2 | createOrder() (conflict path) | ✅ |
+| create·unauthenticated | C3 | T3 | authGuard | ✅ |
+| create·db-timeout (complement) | C4 | — | — | ⚠️ TODO |
 ```
-Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be stated, not blank.
+Done = **every grid cell** has a row with no `TODO`/`—` for in-scope cells. A cell with no test is a visible hole. Out-of-scope deferrals must be stated (`deferred`), not blank.
 
 ---
 
@@ -312,10 +321,14 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 ## Suite
 - runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
 
-## Conformance (every spec-case exercised & asserted)
-| spec-case | test | asserted? | verdict |
-|--------|------|-----------|---------|
-| C1 | T1 | yes | ✅ |
+## Cell coverage (every 00-grid cell → case → test)
+- total cells: <N>  ·  cells with ≥1 test: <N>  ·  uncovered cells: <list — must be empty or deferred(F#)>
+
+## Conformance (every cell exercised & ACTUALLY asserted)
+| cell (00-grid) | case | test | asserts the cell? | verdict |
+|----------------|------|------|-------------------|---------|
+| create·dup-key | C2 | T2 | yes — asserts 409 on conflict | ✅ |
+- **asserts?** is not "does it pass" — confirm the test would FAIL if the cell's behavior regressed (no trivial/always-green tests). The `spec-verifier` agent defaults to refuting this.
 
 ## Traceability (B) — no TODO/empty rows
 - <status; list any deferred rows>

@@ -14,7 +14,7 @@ Three layers, matched to backend risk. No Playwright/screenshots — the appeara
 - **Pure library / no DB or HTTP**: integration & contract layers fold into the unit suite.
 
 ## Layer 1 — Logic (unit, TDD)
-Pure domain logic with no DB/HTTP imports → fast unit tests, RED→GREEN. This is what keeps the logic separable from framework/IO.
+Pure domain logic with no DB/HTTP imports → fast unit tests, RED→GREEN. This is what keeps the logic separable from framework/IO. Write one test **per grid cell** (each equivalence class / boundary / branch-complement from `00-gap-analysis.md`), not one per bundled case; confirm RED for the right reason (a test green against unimplemented code is trivial).
 
 ## Layer 2 — Integration (test DB)
 - Run against a disposable DB with **migrations applied** (the same migrations shipped).
@@ -34,4 +34,4 @@ Pure domain logic with no DB/HTTP imports → fast unit tests, RED→GREEN. This
 - **Migrations** — apply cleanly forward; reversible/additive where claimed; no data loss on existing rows.
 
 ## Comprehensive verify (Phase 11)
-Run everything, then audit: conformance (every resolved-spec case exercised), traceability filled, **logic/IO separation** (domain free of framework/DB imports). Adversarially verify "covered" claims — a contract test that doesn't assert the error code, or an integration test hitting mocks instead of a DB, is hollow. Report gaps honestly.
+Run everything, then audit: **cell coverage** (every `00-gap-analysis.md` cell → case → test, count cells/covered/uncovered — the dimension that catches a class lost between grid and tests), conformance (every cell exercised **and actually asserted**), traceability filled, **logic/IO separation** (domain free of framework/DB imports). The `spec-verifier` agent adversarially checks each "covered" claim against the actual test — a contract test that doesn't assert the error code, an integration test hitting mocks instead of a DB, or a test asserting a sibling class, is hollow. Report gaps honestly.

@@ -97,11 +97,17 @@ The **mandatory** Phase-2 grid, written **before** the resolved spec (the hook b
 # Gap Analysis — <feature>
 slug: <slug>   phase: 2   fan-out: <ran N gap-hunters per section | inline (below threshold)>
 
-## Axes (the variables enumerated)
-- states: <empty/loading/loaded/error/…>
-- inputs: <equivalence classes + boundaries>
-- roles/permissions · external-call outcomes (ok/empty/error/timeout) · navigation/persistence (refresh/deep-link/back) · feature flags
-- (backend: auth/scopes · idempotency · tx/consistency · concurrency · rate-limits · error model)
+## Axis checklist (every axis explicitly TICKED or marked N/A — forces recall of the one thing the grid can't: a forgotten axis)
+- [ ] states (empty/loading/loaded/error/offline/unauthorized/disabled)
+- [ ] inputs + boundaries (0/1/many, min/max/over-max, empty/whitespace/unicode/very-long)
+- [ ] roles / permissions
+- [ ] external-call outcomes (ok/empty/error/timeout/partial)
+- [ ] navigation & persistence (refresh, deep-link, back mid-flow, what survives reload)
+- [ ] concurrency / timing (double-submit, race, stale response, optimistic vs pessimistic)
+- [ ] a11y (focus, keyboard, labels, dialog semantics)
+- [ ] i18n (strings, plural, RTL)  ·  [ ] responsive / breakpoints
+- [ ] performance limits  ·  [ ] feature flags / rollout  ·  [ ] security / authz
+> Any box left unticked without an explicit N·A is itself a gap. The grid below enumerates combinations *within* these ticked axes.
 
 ## Decision table(s)
 | <condition A> | <condition B> | … | → action / result |
@@ -200,15 +206,19 @@ The detail bar: button behavior, file paths, function list, state machine, error
 ## Test Doc (04-test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
+**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-gap-analysis.md` (each equivalence class, boundary value, and branch-complement), NOT the prose case. A case that bundles several classes (e.g. "search matches title/region/dong/type") needs **one test per class + each boundary** — collapsing them into a single test is how coverage silently thins. Cite the originating cell so the Phase-11 verifier can confirm every cell has a test. Boundaries (0/1/many, min/max/over-max, empty/whitespace/unicode), each branch's complement, and each external-call outcome are **separate rows — one assertion each**.
+
 ```markdown
 # Test Doc — <feature>
 
 ## Plan
-| TID | Case (from A) | Layer (logic/ui-behavior/appearance) | Given/When/Then |
-|-----|---------------|--------------------------------------|-----------------|
-| T1  | C1 | logic | given empty cart, when add item, then total = price |
-| T2  | C3 | ui-behavior | given error state, when render, then banner visible |
-| T3  | C5 | appearance | loaded list matches baseline |
+| TID | Cell (00-grid) | Case (A) | Layer (logic/ui-behavior/appearance) | Given/When/Then |
+|-----|----------------|----------|--------------------------------------|-----------------|
+| T1  | search·title-match | C5 | logic | given q matches title only, then that listing returned |
+| T2  | search·type-match | C5 | logic | given q matches type only, then that listing returned |
+| T3  | search·no-match | C5 | logic | given q matches nothing, then [] |
+| T4  | sort·empty-list | C8 | logic | given [], when sort, then [] (no throw) |
+| T5  | error-state·render | C3 | ui-behavior | given error state, when render, then banner visible |
 
 ## Report  (appended P10)
 - Runner: <vitest x.y>  |  E2E: <playwright x.y>
@@ -224,18 +234,18 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 ---
 
 ## Traceability Matrix (05-traceability.md)
-The coverage proof — one row per spec case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. An empty cell means unfinished work; never hide one.
+The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
 
 ```markdown
 # Traceability — <feature>
-| Case (A) | Test(s) (D) | Code unit | Status |
-|----------|-------------|-----------|--------|
-| C1 | T1 | cart.addItem() @ lib/cart.ts | ✅ |
-| C2 | T4 | cart.removeItem() | ✅ |
-| C3 | T2 | <ErrorBanner> | ✅ |
-| C4 | — | — | ⚠️ TODO |
+| Cell (00-grid) | Case (A) | Test(s) (D) | Code unit | Status |
+|----------------|----------|-------------|-----------|--------|
+| cart·add-to-empty | C1 | T1 | cart.addItem() @ lib/cart.ts | ✅ |
+| cart·remove-last | C2 | T4 | cart.removeItem() | ✅ |
+| submit·error-500 | C3 | T2 | <ErrorBanner> | ✅ |
+| submit·timeout (complement) | C4 | — | — | ⚠️ TODO |
 ```
-Done = zero `TODO`/`—` rows for in-scope cases. Out-of-scope deferrals must be stated, not blank.
+Done = **every grid cell** has a row with no `TODO`/`—` for in-scope cells. A cell with no test is a visible hole. Out-of-scope deferrals must be stated (`deferred`), not blank.
 
 ---
 
@@ -315,10 +325,14 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 ## Suite
 - runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
 
-## Conformance (every spec-case exercised & asserted)
-| spec-case | test | asserted? | verdict |
-|--------|------|-----------|---------|
-| C1 | T1 | yes | ✅ |
+## Cell coverage (every 00-grid cell → case → test)
+- total cells: <N>  ·  cells with ≥1 test: <N>  ·  uncovered cells: <list — must be empty or deferred(F#)>
+
+## Conformance (every cell exercised & ACTUALLY asserted)
+| cell (00-grid) | case | test | asserts the cell? | verdict |
+|----------------|------|------|-------------------|---------|
+| search·type-match | C5 | T2 | yes — asserts type-only match | ✅ |
+- **asserts?** is not "does it pass" — confirm the test would FAIL if the cell's behavior regressed (no trivial/always-green tests). The `spec-verifier` agent defaults to refuting this.
 
 ## Traceability (B) — no TODO/empty rows
 - <status; list any deferred rows>

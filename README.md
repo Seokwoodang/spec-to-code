@@ -17,11 +17,22 @@
 /plugin install spec-to-code@spec-to-code
 ```
 
-설치하면 `/spec-to-code` 커맨드, 스킬, 번들 에이전트 3종이 활성화됩니다.
-
 > 업데이트가 나오면 `/plugin` 메뉴에서 받을 수 있습니다.
 
-📖 **실제 런 예시(처음부터 끝까지)**: [`plugins/spec-to-code/examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드까지의 전 과정.
+## 세 가지 전문 스킬
+
+같은 **게이트 TDD 척추**를 공유하되, 검증·갭·설계는 도메인별로 전문화됨 (한 합본으로 어중간해지지 않게):
+
+| 커맨드 | 영역 | 전문화 |
+|---|---|---|
+| **`/spec-to-code-frontend`** (별칭 `/spec-to-code`) | 프론트/UI | Playwright UI-동작·스크린샷 · 컴포넌트 설계 · 상태/인터랙션/a11y 갭 |
+| **`/spec-to-code-backend`** | 서버/API/DB | 통합·API계약·DB/마이그레이션 테스트 · 엔드포인트/스키마 설계 · 인증/멱등성/트랜잭션/rate-limit 갭 |
+| **`/spec-to-code-fullstack`** | 양쪽 | **얇은 조율자** — API 계약 합의 → backend → frontend 순차 (각 절반은 그대로 전문 실행) |
+
+- `/spec-to-code` 는 **frontend의 별칭** (기존 사용 호환). 단일 영역은 front/back을 직접, 양쪽은 fullstack.
+- 척추(갭→게이트→TDD→리뷰→문서→훅 강제)는 셋 다 동일.
+
+📖 **실제 런 예시(처음부터 끝까지)**: [`examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드.
 
 ---
 

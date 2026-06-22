@@ -1,10 +1,10 @@
 ---
-name: spec-to-code
-description: This skill should be used when the user wants to turn an incomplete or ambiguous spec/PRD into complete, verified, production code — triggers include "/spec-to-code", "implement this spec", "build from this spec", "기획서로 개발", "불완전한 기획서", "spec to code", "turn this spec into code", or when handed a feature spec (in any format — md, HTML, PDF, image, Figma, docx, URL, pasted text) and asked to code it properly with tests, review, and docs. Runs a gated TDD flow that resolves spec gaps with the user before any code is written.
-version: 0.24.0
+name: spec-to-code-frontend
+description: This skill should be used to build a **frontend / UI** feature from an incomplete or ambiguous spec — triggers include "/spec-to-code-frontend", "/spec-to-code", "implement this UI spec", "build this screen/component", "기획서로 프론트 개발", "불완전한 기획서", or when handed a UI spec in any format (md, HTML, PDF, image, Figma, docx, URL, pasted text) to code with tests, review, and docs. Runs a gated TDD flow (logic unit tests · Playwright UI-behavior/screenshot verification) that resolves spec gaps with the user before any code is written. For server/API/DB work use spec-to-code-backend; for features spanning both use spec-to-code-fullstack.
+version: 1.0.0
 ---
 
-# Spec-to-Code
+# Spec-to-Code · Frontend
 
 Turn an **incomplete spec** into **complete, verified code** through a gated, test-driven flow. The value is the work *between* spec and code: finding what the spec leaves unsaid, resolving it with the user, and proving the result.
 
@@ -106,4 +106,4 @@ A bundled PreToolUse hook (`hooks/gate-guard.mjs`) makes the gates structural, i
 - `references/lite-mode.md` — lite tier (small changes)
 - `scripts/verify-workflow.js` — Phase-11 fan-out harness
 - Bundled agents (when installed): `gap-hunter` (P2), `code-reviewer` (P10), `spec-verifier` (P11); degrade to `Explore`/inline if absent.
-- Worked example: `examples/example-run-product-search.md`.
+- Worked example: `../../examples/example-run-product-search.md`.

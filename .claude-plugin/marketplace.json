@@ -1,7 +1,8 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "spec-to-code",
-  "description": "Marketplace hosting the spec-to-code plugin — a gated, test-driven flow that turns incomplete specs into complete, verified code.",
+  "metadata": {
+    "description": "Marketplace hosting the spec-to-code plugin — a gated, test-driven flow that turns incomplete specs into complete, verified code."
+  },
   "owner": {
     "name": "Seokwoo Kang",
     "email": "swkang@parametacorp.com"

@@ -54,6 +54,20 @@ A spec almost always states the **positive** case ("when X, the button goes to *
 
 This is the concrete net for "AI implemented the `if` but not the `else`."
 
+## Enumerate, don't eyeball — decision tables & state×event matrices
+
+For any behavior driven by conditions, do **not** rely on prose "be exhaustive". Build the explicit grid and force every cell — this turns "did we think of every case?" into a filled table (combinatorial completeness over the identified axes).
+
+1. **List the axes** (the variables): inputs, UI/resource states, roles/permissions, feature flags, external-call outcomes (ok/empty/error/timeout). *This step is judgment — list every axis you can think of; a missed **axis** (not a missed combination) is the residual risk that enumeration can't close.*
+2. **Take the cartesian product** — every combination is a row/cell.
+3. **Every cell must have a decided behavior. An empty cell = unresolved gap → a Gate-1 question.** No cell is assumed.
+4. Two shapes:
+   - **Decision table** — conditions (columns) × rules (rows) → action. Catches missing rule combinations.
+   - **State × event matrix** — states (rows) × events (columns) → next state / effect. Catches missing transitions, **including the else/complement** ("when NOT X").
+5. **Unbounded inputs** → enumerate **equivalence classes + boundaries** as the axis values (empty, min, max, over-max, malformed, unicode/emoji, very long).
+
+The grid kills "combination missed" (incl. the if-without-else class) deterministically. What it cannot kill is an axis nobody listed — that's for the review/critic nets, not the grid.
+
 ## Severity tagging
 
 Tag each gap so questioning can prioritize and so trivial items don't drown the user:

@@ -37,6 +37,17 @@ Tag each gap so resolution can prioritize:
 
 For each gap, phrase the resolution as an answerable question and, where possible, frame the eventual answer as "given … when … then …". If a gap cannot become a test case once answered, say so — it signals the question is still too vague.
 
+## Enumerate with matrices (don't eyeball)
+
+For any behavior driven by conditions, **build an explicit grid** rather than trusting prose exhaustiveness:
+1. List the **axes** (variables): inputs, states, roles, flags, external outcomes (ok/empty/error/timeout).
+2. Take the **cartesian product**; every combination is a cell.
+3. **Every empty cell is a gap.** Report each unfilled cell as its own question. Never assume a cell.
+4. Use a **state × event matrix** (states × events → next/effect) to catch missing transitions, **including every complement** — a spec stating "when X → A" must also resolve "when NOT X → ?".
+5. Unbounded inputs → enumerate **equivalence classes + boundaries** (empty, min, max, over-max, malformed, unicode) as axis values.
+
+Include the matrices (or their unfilled cells) in your output. This makes combinatorial omissions — especially the if-without-else class — deterministic, not luck.
+
 ## Output
 
 Return a structured list. For each gap: an id, the category, the severity, a one-line description of what is undecided, and the crisp question to put to the user. Do not propose a single answer as if decided — offer options where the space is small, but the decision belongs to the user. End with a short note on any categories you checked and found fully covered, so the caller knows the scan was complete.

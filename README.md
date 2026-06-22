@@ -28,6 +28,27 @@
 
 단일 영역은 front/back 직접, 양쪽은 fullstack. `/spec-to-code` 는 frontend 별칭(기존 호환).
 
+## 사용법
+
+기획서를 던지기만 하면 됩니다 (포맷 자유: md · HTML · PDF · 이미지/Figma · URL · 붙여넣기):
+
+```
+/spec-to-code-frontend  movie-booking.html
+/spec-to-code-backend   api-spec.md
+/spec-to-code-fullstack  feature.md
+```
+
+이후 **사용자가 개입하는 건 세 군데** (나머지 갭조사·구현·검증은 자동). 각 게이트는 **문서 파일을 열어 읽고 승인/수정**:
+
+| 체크포인트 | 받는 것 | 하는 것 |
+|---|---|---|
+| 🚪 **Gate 1** (코딩 전) | 갭 질문 → `02-resolved-spec.md` | 빈 곳 답하고 → 파일 승인 |
+| 🚪 **Tests gate** (구현 전) | `03-design.md` + RED 테스트 | 설계·테스트 읽고 → 승인 |
+| 🔁 **리뷰 루프** (반복) | `06-review/r1.md…` (독립 리뷰) | finding별 fix/defer/reject → 통과까지 |
+| 🚪 **Gate 2** (완료) | `08-completion.md` + 검증·스크린샷 | 최종 승인 (커밋은 명시 지시 때만) |
+
+> "꼼꼼히/단계별로" 라고 하면 설계·구현·UI도 각각 멈추는 **step-through** 모드. 작은 변경은 자동으로 **lite**(4단계·1게이트).
+
 ## 동작 방식
 
 아래 흐름은 **frontend·backend 공통(12 페이즈 척추)** 입니다. **fullstack은 다름** — 12페이즈를 직접 돌지 않고 *API 계약 합의 → backend 실행 → frontend 실행* 으로 두 스킬을 조율합니다.
@@ -53,7 +74,22 @@ flowchart TD
   class G1,G2,G3,G4 gate;
 ```
 
-**12 페이즈** (🚪=하드스톱): 1 Ingest&probe → 2 갭 분석 → 3 갭 해소 → 🚪**4 Gate 1**(확정명세) → 5 설계 → 🚪**6 Tests gate**(RED, 구현 전) → 7·8 구현(GREEN) → 9 검증(FE 스크린샷 / BE 통합·계약) → 🔁**10 리뷰 루프** → 11 종합 검증 → 🚪**12 Gate 2**(완료).
+| # | 페이즈 | 산출 | 정지 |
+|---|--------|------|------|
+| 1 | Ingest & probe | working spec + 환경/모드/tier 판정 | — |
+| 2 | 갭 분석 | 갭 목록 (전수) | — |
+| 3 | 갭 해소 | `02-resolved-spec.md` | — |
+| 4 | **🚪 Gate 1** | 확정 명세 승인 | **하드스톱** |
+| 5 | 설계 | `03-design.md`(완벽한 개발문서) + `05-traceability.md` | 🟠 |
+| 6 | **🚪 Tests gate** | RED 테스트 + `04-test-doc.md`, 구현 전 승인 | **하드스톱** |
+| 7 | 로직 구현 | 로직 테스트 GREEN | 🟡 |
+| 8 | UI/API 구현 | 동작 테스트 GREEN | 🟡 |
+| 9 | 검증 | FE: Playwright 스크린샷 / BE: 통합·계약 | 🟠 |
+| 10 | **🔁 리뷰 루프** | 독립 리뷰어 → `06-review/r<k>.md`, 통과까지 | **하드스톱** |
+| 11 | 종합 검증 | `05-traceability.md` 채움 + `07-verify.md` | — |
+| 12 | **🚪 Gate 2** | `08-completion.md` + 패키지 보고 | **하드스톱** |
+
+(🔴 4·6·10·12 = checkpoint 모드 하드스톱 · 🟠🟡 5·7·8·9 = step-through에서 추가 정지 · 1·2·11 = 안 멈춤)
 
 - **갭은 사용자가 결정** — 추론하지 않고 묻는다. 테스트로 못 쓸 만큼 모호하면 그것도 갭.
 - **게이트는 문서로** — 각 하드스톱마다 MD 파일을 만들어 경로를 주고, 당신이 읽고 승인/수정. 채팅 표 아님.

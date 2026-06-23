@@ -94,7 +94,7 @@ flowchart TD
 | # | 페이즈 | 산출 | 정지 |
 |---|--------|------|------|
 | 1 | Ingest & probe | working spec + 환경/모드/tier 판정 | — |
-| 2 | 갭 분석 | 갭 목록 (전수) | — |
+| 2 | 갭 분석 | `00-behavior-grid.md` — 전체 동작 격자 (빈 칸 없이) | — |
 | 3 | 갭 해소 | `02-resolved-spec.md` | — |
 | 4 | **🚪 Gate 1** | 확정 명세 승인 | **하드스톱** |
 | 5 | 설계 | `03-design.md`(완벽한 개발문서) + `05-traceability.md` | 🟠 |
@@ -121,12 +121,37 @@ flowchart TD
 ```
 docs/spec-to-code/<slug>/
 ├── index.md · CHANGELOG.md · deferred.md(TODO) · source/   # 공통
-└── v1/  00-gap-analysis · 01-working-spec · 02-resolved-spec · 03-design
+└── v1/  00-behavior-grid · 01-working-spec · 02-resolved-spec · 03-design
        04-test-doc · 05-traceability · 06-review/ · 07-verify · 08-completion
 ```
 코드·테스트는 doc home이 아니라 프로젝트 자체 위치에. 업데이트는 `v2/` 생성 후 직전 버전과 diff.
 
-> **`00-gap-analysis.md` 는 필수다.** Phase 2에서 축을 나열하고 결정표/상태×이벤트 매트릭스를 **빈 칸 없이** 채운 뒤에야 `02-resolved-spec.md` 를 쓸 수 있다(hook이 강제). 멀티스크린/멀티엔드포인트면 `gap-hunter` 팬아웃 + 적대적 크리틱이 필수. 테스트는 케이스가 아니라 **격자 셀(등가 클래스·경계·보완)마다 1개**로 만들어, 추적성·종합검증이 "모든 셀 → 케이스 → 테스트"를 확인한다.
+### 각 파일의 역할
+
+**버전별 (`v<N>/`)** — 워크플로우 순서대로:
+
+| 파일 | 역할 | 게이트 |
+|---|---|---|
+| `00-behavior-grid.md` | **전체 동작 격자.** 축(입력·상태·역할·플래그·외부호출 결과…)×값을 카르테시안 곱으로 펼쳐 **빈 칸 없이** 결정한 결정표/상태×이벤트 매트릭스. *기획서의 구멍만이 아니라 전체 동작을 분해한 것*이며, 테스트 커버리지의 단위(셀). | (hook이 02 전 강제) |
+| `01-working-spec.md` | 어떤 포맷이든 정규화한 **기획서 스냅샷** — 이후 업데이트 diff의 기준선. | — |
+| `02-resolved-spec.md` | 갭을 사용자와 해소해 **확정된 명세** (결정·케이스·엣지·에러 확정). | 🚪 Gate 1 |
+| `03-design.md` | **완전한 개발 문서** — 모든 파일·경로, 함수 시그니처, 빠짐없는 동작 명세, 통합점. | 🚪 Tests gate |
+| `04-test-doc.md` | 테스트 **계획→리포트** + QA가 코드 없이 읽는 **per-test 명세**(검증목적·전제조건·스텝·기대결과·🔍수동 QA 절차·의심 변형). | 🚪 Tests gate |
+| `05-traceability.md` | **양방향 커버리지 증명** — 기획서 동작 ↔ 셀 ↔ 테스트 ↔ 코드 매핑표 (빈 칸 = 미완성). | (Gate 2 전 채움) |
+| `06-review/r<k>.md` | **라운드별 독립 리뷰** — blind 발견(이전 라운드 안 봄) + non-blind closure 확인. 모든 라운드 보존. | 🔁 리뷰 루프 |
+| `07-verify.md` | **종합 검증** — 양방향 셀 커버리지·적합성·추적성·로직-UI 분리 감사. | (Gate 2 전) |
+| `08-completion.md` | **완료 요약** — 실행법, 검증 결과, 잔여 항목. | 🚪 Gate 2 |
+
+**공통 (slug 루트, 버전 무관)**:
+
+| 파일 | 역할 |
+|---|---|
+| `index.md` | 산출물 목차/매니페스트 |
+| `CHANGELOG.md` | 버전별 변경 로그 |
+| `deferred.md` | 보류·TODO 파킹랏 (재방문 트리거와 함께 — 무엇도 조용히 누락되지 않게) |
+| `source/` | 원본 기획서 원문 보관 |
+
+> **`00-behavior-grid.md` 는 필수다.** Phase 2에서 축을 나열하고 결정표/상태×이벤트 매트릭스를 **빈 칸 없이** 채운 뒤에야 `02-resolved-spec.md` 를 쓸 수 있다(hook이 강제). 멀티스크린/멀티엔드포인트면 `gap-hunter` 팬아웃 + 적대적 크리틱이 필수. 테스트는 케이스가 아니라 **격자 셀(등가 클래스·경계·보완)마다 1개**로 만들어, 추적성·종합검증이 **양방향**으로 "모든 기획서 동작 → 셀 → 테스트 → 코드"를 확인한다.
 
 📖 **실제 런 예시**: [`examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드 전 과정.
 

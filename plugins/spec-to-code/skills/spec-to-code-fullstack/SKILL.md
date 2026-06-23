@@ -26,7 +26,7 @@ spec (UI + server) → ① agree API contract → ② backend specialist → ③
 **4 · Integration seam (optional).** If an end-to-end path matters, add a thin e2e that exercises UI → real backend against a test DB; otherwise the contract tests (backend) + stubbed UI tests (frontend) already pin both sides to the same contract.
 
 ## Rules
-- **Thin by design** — this skill has *no verification of its own*. All testing/review/docs happen inside the two specialist runs. Its only owned artifact is `api-contract.md`. (Each specialist run enforces its own mandatory Phase-2 `00-gap-analysis.md` grid + completeness critic, so the fullstack flow inherits exhaustive gap analysis on both sides — no extra step here.)
+- **Thin by design** — this skill has *no verification of its own*. All testing/review/docs happen inside the two specialist runs. Its only owned artifact is `api-contract.md`. (Each specialist run enforces its own mandatory Phase-2 `00-behavior-grid.md` grid + completeness critic, so the fullstack flow inherits exhaustive gap analysis on both sides — no extra step here.)
 - **Contract drift** — if either side must change the contract, change `api-contract.md` (it's versioned with the run) and re-surface it to the other side; never let the two diverge silently.
 - **Each side is a full run** — its own gates, hook enforcement, version folder, deferred list. Don't short-circuit them.
 - Slugs: keep them findable — e.g. backend run under `<slug>` server scope, frontend under the UI scope; both link `api-contract.md`. (Or run as `<slug>-backend` / `<slug>-frontend` if cleaner.)

@@ -14,7 +14,7 @@ The flow proves correctness in three layers, each matched to what it can actuall
 - **No UI** (CLI/library): skip the UI-behavior and appearance layers entirely; logic TDD carries the whole verification.
 
 ## Layer 1 — Logic TDD
-1. From the Test Plan, write one test **per grid cell** (each equivalence class / boundary / branch-complement from `00-gap-analysis.md`), not one per bundled case — before implementing.
+1. From the Test Plan, write one test **per grid cell** (each equivalence class / boundary / branch-complement from `00-behavior-grid.md`), not one per bundled case — before implementing.
 2. Run → confirm RED for the right reason (function missing / not-implemented), not a typo. A test that goes GREEN against unimplemented code is trivial — fix it.
 3. Implement the smallest logic to go GREEN. Refactor with tests green.
 4. Keep logic pure and import-light so it tests without DOM/network — this enforces the logic/UI split.
@@ -35,7 +35,7 @@ The flow proves correctness in three layers, each matched to what it can actuall
 
 ## Comprehensive verify (Phase 10)
 Run everything, then audit four dimensions — inline, or as a Workflow fan-out (`scripts/verify-workflow.js`) if multi-agent orchestration is opted into:
-1. **Cell coverage** — **every grid cell** from `00-gap-analysis.md` maps to ≥1 test (count cells, count covered, list any uncovered → must be empty or deferred). This is the dimension that catches a class that vanished between grid and tests.
+1. **Cell coverage (bidirectional)** — **forward:** every behavior in the resolved spec maps to ≥1 grid cell (the grid is a complete decomposition of the whole spec, not just its gaps — a well-defined requirement that never became a cell is an untested behavior); **back:** **every grid cell** from `00-behavior-grid.md` maps to ≥1 test (count cells, count covered, list any uncovered → must be empty or deferred). Forward catches a spec behavior that never entered the grid; back catches a class that vanished between grid and tests.
 2. **Conformance** — every cell is demonstrably exercised by a test or screenshot **and actually asserted** (the test would fail if the behavior regressed).
 3. **Coverage / traceability** — the matrix has no `TODO`/empty rows; each cell → case → test → code → pass.
 4. **Separation** — logic has no UI imports; UI is thin over tested logic. Flag leaks.

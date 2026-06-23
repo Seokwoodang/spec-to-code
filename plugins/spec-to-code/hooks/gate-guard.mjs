@@ -3,7 +3,7 @@
 //
 // Staged enforcement — blocks edits until the required gate docs are approved.
 // Stages (in .spec-to-code-state.json):
-//   (stage 0) 02-resolved-spec.md → blocked until 00-gap-analysis.md exists in the same
+//   (stage 0) 02-resolved-spec.md → blocked until 00-behavior-grid.md exists in the same
 //             v<N>/ dir (Phase-2 enumeration must precede the Gate-1 contract; presence-only)
 //   designApproved=false → block ALL code & test files (only docs editable)
 //   designApproved=true, testsApproved=false → allow TEST files, block impl files
@@ -71,17 +71,17 @@ try {
   }
 
   // Stage 0: the resolved spec (02, the Gate-1 contract) may not be written until the
-  // gap-analysis grid (00) exists in the SAME version dir. This makes Phase-2 enumeration
+  // behavior grid (00, produced by Phase-2 gap analysis) exists in the SAME version dir. This makes Phase-2 enumeration
   // structurally un-skippable — you cannot reach the contract without first producing the
   // filled decision-table / state×event matrix. (Presence only; completeness is the
   // critic's + the exit checklist's job — a hook cannot judge it.)
   const isResolvedSpec = /^0?2-resolved-spec\.md$/i.test(basename(targetAbs))
   if (inDocHome && isResolvedSpec) {
-    const gapDoc = join(dirname(targetAbs), '00-gap-analysis.md')
+    const gapDoc = join(dirname(targetAbs), '00-behavior-grid.md')
     if (!existsSync(gapDoc)) {
       process.stderr.write(
-        `⛔ spec-to-code: '${state.slug || '?'}' — gap analysis (00) is missing.\n` +
-        `Write ${docHome}/v<N>/00-gap-analysis.md FIRST: list the axes, build the decision table(s) / ` +
+        `⛔ spec-to-code: '${state.slug || '?'}' — the behavior grid (00) is missing.\n` +
+        `Write ${docHome}/v<N>/00-behavior-grid.md FIRST: list the axes, build the decision table(s) / ` +
         `state×event matrix(es) with EVERY cell decided (no empty cells), apply branch-complement to every ` +
         `conditional, and run the adversarial completeness critic. Only then write 02-resolved-spec.md.\n` +
         `(Enumeration is unconditional — not gated on spec size. See references/gap-analysis.md.)\n`

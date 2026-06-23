@@ -10,11 +10,25 @@
 
 ## 설치
 
+1. 마켓플레이스 추가
+
 ```
 /plugin marketplace add Seokwoodang/spec-to-code
+```
+
+2. 플러그인 설치
+
+```
 /plugin install spec-to-code@spec-to-code
 ```
-**업데이트** — `/plugin marketplace update spec-to-code` 실행 후 Claude Code 재시작. 끝. (안 잡히면 `/plugin` 메뉴에서 Update, 그래도 안 되면 uninstall 후 재설치.) 기존 `/spec-to-code` 는 업데이트 후에도 그대로 작동합니다.
+
+## 업데이트
+
+```
+/plugin marketplace update spec-to-code
+```
+
+실행 후 Claude Code 재시작. 끝. (안 잡히면 `/plugin` 메뉴에서 Update, 그래도 안 되면 uninstall 후 재설치.) 기존 `/spec-to-code` 는 업데이트 후에도 그대로 작동합니다.
 
 > 플러그인을 직접 개발/수정 중이라면 마켓 거치지 말고 로컬 폴더를 바로 물려 쓰면 편합니다 (수정 후 재시작만 하면 반영): `claude --plugin-dir <repo>/plugins/spec-to-code`
 

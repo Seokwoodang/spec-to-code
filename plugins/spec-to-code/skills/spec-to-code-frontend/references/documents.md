@@ -18,7 +18,7 @@ docs/spec-to-code/<slug>/
 ├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
 ├── deferred.md      COMMON: parking lot (carries across versions, living)
 ├── v1/                fresh run's full artifact set
-│   ├── 00-gap-analysis.md   filled grid (axes + decision/state×event tables) — Phase 2, MANDATORY, hook-gated before 02
+│   ├── 00-behavior-grid.md   filled grid (axes + decision/state×event tables) — Phase 2, MANDATORY, hook-gated before 02
 │   ├── 01-working-spec.md   normalized snapshot — the diff baseline for the NEXT version
 │   ├── 02-resolved-spec.md
 │   ├── 03-design.md         the complete dev doc (Phase 5): files, functions, every behavior
@@ -90,7 +90,7 @@ The Tasks list is the literal "to-do for this update." Keep it honest — an unc
 
 ---
 
-## Gap Analysis (00-gap-analysis.md)
+## Gap Analysis (00-behavior-grid.md)
 The **mandatory** Phase-2 grid, written **before** the resolved spec (the hook blocks `02` until this exists). Its job: turn "did we think of every case?" into "is any cell empty?". Not gated on spec size.
 
 ```markdown
@@ -206,19 +206,48 @@ The detail bar: button behavior, file paths, function list, state machine, error
 ## Test Doc (04-test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
-**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-gap-analysis.md` (each equivalence class, boundary value, and branch-complement), NOT the prose case. A case that bundles several classes (e.g. "search matches title/region/dong/type") needs **one test per class + each boundary** — collapsing them into a single test is how coverage silently thins. Cite the originating cell so the Phase-11 verifier can confirm every cell has a test. Boundaries (0/1/many, min/max/over-max, empty/whitespace/unicode), each branch's complement, and each external-call outcome are **separate rows — one assertion each**.
+**This is the QA hand-off surface.** A QA engineer (or the user) must be able to read it *without opening the test code* and (1) **re-verify the behavior by hand in the running app**, and (2) **spot a missing case and propose it as a new grid cell**. So each per-test spec carries not just what the automated test does, but **how to manually QA it** and **what variations to probe next**. The index `요약` must state **조건 → 기대결과 in one full sentence** (terse fragments like "API 500 → 배너" are not enough). Every test gets a **per-test spec** (below) with **검증 목적 / 전제조건 / 입력·조건 / 자동 테스트 스텝 / 기대결과 / 🔍 수동 QA 절차 / QA가 더 의심해볼 변형**.
+
+**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-behavior-grid.md` (each equivalence class, boundary value, and branch-complement), NOT the prose case. A case that bundles several classes (e.g. "search matches title/region/dong/type") needs **one test per class + each boundary** — collapsing them into a single test is how coverage silently thins. Cite the originating cell so the Phase-11 verifier can confirm every cell has a test. Boundaries (0/1/many, min/max/over-max, empty/whitespace/unicode), each branch's complement, and each external-call outcome are **separate rows — one assertion each**.
 
 ```markdown
 # Test Doc — <feature>
 
-## Plan
-| TID | Cell (00-grid) | Case (A) | Layer (logic/ui-behavior/appearance) | Given/When/Then |
-|-----|----------------|----------|--------------------------------------|-----------------|
-| T1  | search·title-match | C5 | logic | given q matches title only, then that listing returned |
-| T2  | search·type-match | C5 | logic | given q matches type only, then that listing returned |
-| T3  | search·no-match | C5 | logic | given q matches nothing, then [] |
-| T4  | sort·empty-list | C8 | logic | given [], when sort, then [] (no throw) |
-| T5  | error-state·render | C3 | ui-behavior | given error state, when render, then banner visible |
+## Plan — index (one row per test = per grid cell)
+`요약`은 **조건 → 기대결과가 한 문장에** 담기게. 표만 훑어도 무엇을 검증하는지 알 수 있어야 함.
+| TID | Cell (00-grid) | Case (A) | Layer | 요약 (조건 → 기대결과) |
+|-----|----------------|----------|-------|------------------------|
+| T1  | search·title-match | C5 | logic | 검색어가 **제목에만** 포함된 매물이 있을 때, 그 매물만 반환하고 지역·타입만 맞는 건 제외한다 |
+| T2  | search·region-match | C5 | logic | 검색어가 **지역명에만** 일치하는 매물이 있을 때, 그 매물만 반환한다 |
+| T3  | search·no-match | C5 | logic | 어떤 필드와도 일치하지 않는 검색어면 빈 배열을 반환한다(throw 없음) |
+| T4  | sort·empty-list | C8 | logic | 빈 목록을 정렬하면 예외 없이 빈 배열을 그대로 반환한다 |
+| T5  | error-state·render | C3 | ui-behavior | 검색 API가 500을 반환하면, 결과 리스트 대신 에러 배너+"다시 시도"가 뜨고 이전 결과는 사라진다 |
+
+## Test Spec — per test (QA가 읽고 직접 검증·보완하는 본문)
+각 테스트가 무슨 조건에서 / 어떤 스텝으로 / 무엇을 검증하는지 + **QA가 앱에서 직접 확인하는 절차**와 **추가로 의심해볼 변형**. QA는 이 섹션만 읽고 (1) 직접 재현해 검증하고 (2) 빠진 케이스를 새 grid cell로 제안할 수 있어야 함.
+
+### T1 · 제목에만 일치하는 검색
+- **Cell / Layer:** search·title-match / logic (순수 함수, DOM·네트워크 없음)
+- **검증 목적:** 검색이 제목 필드를 실제로 매칭하며, 다른 필드만 맞는 매물을 잘못 포함하지 않는다.
+- **전제조건:** 매물 3건 — ①제목="강남 신축 오피스텔", ②지역="강남구"(제목엔 '오피스텔' 없음), ③타입="원룸".
+- **입력·조건:** `q = "오피스텔"` (①의 제목에만 매칭).
+- **자동 테스트 스텝:** ① `searchListings(listings, "오피스텔")` 호출.
+- **기대결과:** `[①]` 반환(길이 1), ②③ 제외. (대소문자·공백 boundary는 T2/T3·별도 셀)
+- **🔍 수동 QA:** 순수 함수라 앱 UI 없이 검증 — 콘솔/REPL에서 `searchListings(샘플, "오피스텔")` 실행해 ①만 나오는지 확인. 또는 T7(UI)로 검색창에 입력해 카드 1개만 뜨는지 교차 확인.
+- **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 부분일치 vs 정확일치? "오피스텔" 대문자/영문/유니코드? 제목+지역 동시 일치 시 중복 없이 1건? 특수문자(`%`,`_`) 검색?
+
+### T5 · 에러 상태 배너 표시
+- **Cell / Layer:** error-state·render / ui-behavior (Playwright, 실제 브라우저)
+- **검증 목적:** 검색 중 서버 오류(500)가 나면 사용자에게 에러를 알리고 재시도 수단을 주며, 깨진 이전 결과를 남기지 않는다.
+- **전제조건:** 검색 API를 HTTP 500으로 stub. 결과가 한 번 떠 있는 상태에서 재검색.
+- **입력·조건:** 검색 실행 → 서버 500 응답.
+- **자동 테스트 스텝:** ① 페이지 렌더 ② 검색어 입력→검색 버튼 클릭 ③ 네트워크 500 반환 ④ `getByRole('alert')`(또는 "다시 시도" 텍스트)로 배너 조회.
+- **기대결과:** 에러 배너 visible + "다시 시도" 버튼 존재, 결과 리스트 비표시. (배너 색/정렬 등 외관은 Phase 9 스크린샷에서 별도)
+- **🔍 수동 QA (앱에서 직접):**
+  1. 앱 실행 → DevTools Network에서 검색 요청을 500으로 막기(또는 서버 중단).
+  2. 검색어 입력 후 검색.
+  3. 확인: 배너 노출 · 문구 오타 · "다시 시도" 클릭 시 재요청 발생 · 이전 결과가 남지 않는지 · 스크린리더로 alert가 읽히는지.
+- **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 401/403/타임아웃/오프라인에서도 같은 배너인가? "다시 시도" 연타 시 중복요청 막히나? 에러 후 정상검색하면 배너가 사라지나? 느린 응답 시 스피너(T10)→에러 전환이 자연스러운가?
 
 ## Report  (appended P10)
 - Runner: <vitest x.y>  |  E2E: <playwright x.y>
@@ -234,7 +263,7 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 ---
 
 ## Traceability Matrix (05-traceability.md)
-The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
+The coverage proof — **one row per grid cell** (from `00-behavior-grid.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
 
 ```markdown
 # Traceability — <feature>
@@ -245,18 +274,20 @@ The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), no
 | submit·error-500 | C3 | T2 | <ErrorBanner> | ✅ |
 | submit·timeout (complement) | C4 | — | — | ⚠️ TODO |
 ```
-Done = **every grid cell** has a row with no `TODO`/`—` for in-scope cells. A cell with no test is a visible hole. Out-of-scope deferrals must be stated (`deferred`), not blank.
+Done = coverage holds in **both directions**: (1) **forward** — every behavior in the resolved spec maps to ≥1 grid cell (nothing well-specified was dropped before the grid; this row-set is a complete decomposition of the whole spec, not just its gaps); (2) **back** — **every grid cell** has a row with no `TODO`/`—` for in-scope cells (a cell with no test is a visible hole). Out-of-scope deferrals must be stated (`deferred`), not blank.
 
 ---
 
 ## Review (per-round files, `v<N>/06-review/r<k>.md`)
-The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `06-review/r1.md`, `06-review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
+The Phase-10 review loop. **Each round is a separate file** (`06-review/r1.md`, `r2.md`, …); all kept, never edit a prior round's file. Each round has **two clearly-labeled parts**:
+- **Discovery (blind)** — produced by an **independent reviewer** (fresh subagent, never the author/main loop) that sees **only the current diff + resolved spec, never a prior round**. This is why discovery findings are *re-found fresh* each round rather than carried over — feeding the reviewer r1 would anchor it. Write like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending snippet, why it matters, the fix as code**, plus a "what's good" section and a one-line summary. Not a terse table.
+- **Closure (not blind)** — a short table confirming each prior round's `fix`-dispositioned finding actually landed in the current diff. This *needs* the prior round as input, so the **main loop writes it (not the blind reviewer)** and the section is **explicitly marked non-blind**. From r2 onward only.
 
 ```markdown
 # Review — <feature>
 
 ## Round 1
-reviewer: code-reviewer   scope: <files reviewed>   suite: <N/M green>
+reviewer: code-reviewer (blind — diff + resolved spec only)   scope: <files reviewed>   suite: <N/M green>
 
 전반적으로 <1–2문장 총평>.
 
@@ -284,7 +315,16 @@ if (error) return redirect(error.code === '23505' ? '/err?dup' : '/err')
 **요약:** <what must change (critical) vs recommended>.
 
 ## Round 2
-(re-review after fixes — reuse ids, mark ✅ resolved; never overwrite Round 1)
+reviewer: code-reviewer (blind — diff + resolved spec only, did NOT see Round 1)   suite: <N/M green>
+
+### 🔵 Closure of Round 1 (main loop — NOT blind)
+| R1 finding | disposition | landed in diff? | evidence |
+|------------|-------------|-----------------|----------|
+| R1 critical — <title> | fix | ✅ | `file.ts:53` now checks error |
+| R2 major — <title> | defer(F) | n/a — deferred | `deferred.md#f-2` |
+
+### Discovery (blind, this round)
+(new findings the fresh reviewer found in the current code — independent of R1's ids; never overwrite Round 1)
 ```
 
 Each finding carries id, severity (`critical/blocker` · `major` · `minor`), `file:line`, the **code snippet**, the **fix as code**, and a **disposition the user sets** (`fix` / `defer(F)` / `reject`). The loop passes only when no open critical/major remain **and** the user approves the latest round. Produce the findings; the user dispositions — never both.

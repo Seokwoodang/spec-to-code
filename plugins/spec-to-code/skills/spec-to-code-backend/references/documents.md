@@ -18,7 +18,7 @@ docs/spec-to-code/<slug>/
 ├── source/            COMMON: verbatim original archive (<date>-original.<ext>)
 ├── deferred.md      COMMON: parking lot (carries across versions, living)
 ├── v1/                fresh run's full artifact set
-│   ├── 00-gap-analysis.md   filled grid (axes + decision/state×event tables) — Phase 2, MANDATORY, hook-gated before 02
+│   ├── 00-behavior-grid.md   filled grid (axes + decision/state×event tables) — Phase 2, MANDATORY, hook-gated before 02
 │   ├── 01-working-spec.md   normalized snapshot — the diff baseline for the NEXT version
 │   ├── 02-resolved-spec.md
 │   ├── 03-design.md         the complete dev doc (Phase 5): files, functions, every behavior
@@ -90,7 +90,7 @@ The Tasks list is the literal "to-do for this update." Keep it honest — an unc
 
 ---
 
-## Gap Analysis (00-gap-analysis.md)
+## Gap Analysis (00-behavior-grid.md)
 The **mandatory** Phase-2 grid, written **before** the resolved spec (the hook blocks `02` until this exists). Its job: turn "did we think of every case?" into "is any cell empty?". Not gated on spec size.
 
 ```markdown
@@ -203,18 +203,47 @@ The detail bar: button behavior, file paths, function list, state machine, error
 ## Test Doc (04-test-doc.md)
 Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set of cases fully cover A?). **Report** is appended in Phase 10 with results.
 
-**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-gap-analysis.md` (each equivalence class, boundary, branch-complement, and external/DB outcome), NOT the prose case. A case that bundles several classes needs **one test per class**; collapsing them is how coverage silently thins. Cite the originating cell. Boundaries (empty/min/max/over-max/malformed/unicode), each complement, each downstream outcome (ok/empty/error/timeout/partial), and auth/role variants are **separate rows — one assertion each**.
+**This is the QA hand-off surface.** A QA engineer (or the user) must be able to read it *without opening the test code* and (1) **re-verify the behavior by hand against a running API** (curl/Postman + a DB peek), and (2) **spot a missing case and propose it as a new grid cell**. So each per-test spec carries not just what the automated test does, but **how to manually QA it** and **what variations to probe next**. The index `요약` must state **조건 → 기대결과 in one full sentence** (terse fragments like "중복 키 → 409" are not enough). Every test gets a **per-test spec** (below) with **검증 목적 / 전제조건(데이터·인증·외부 stub) / 요청·조건 / 자동 테스트 스텝 / 기대결과(상태코드·바디·DB·부작용) / 🔍 수동 QA 절차 / QA가 더 의심해볼 변형**.
+
+**Coverage rule — test per CELL, not per case.** The unit of coverage is the **grid cell** from `00-behavior-grid.md` (each equivalence class, boundary, branch-complement, and external/DB outcome), NOT the prose case. A case that bundles several classes needs **one test per class**; collapsing them is how coverage silently thins. Cite the originating cell. Boundaries (empty/min/max/over-max/malformed/unicode), each complement, each downstream outcome (ok/empty/error/timeout/partial), and auth/role variants are **separate rows — one assertion each**.
 
 ```markdown
 # Test Doc — <feature>
 
-## Plan
-| TID | Cell (00-grid) | Case (A) | Layer (logic/integration/contract/db) | Given/When/Then |
-|-----|----------------|----------|---------------------------------------|-----------------|
-| T1  | create·valid | C1 | integration | given valid body, when POST, then 201 + row created |
-| T2  | create·dup-key | C2 | integration | given existing key, when POST, then 409 (idempotent) |
-| T3  | create·unauthenticated | C3 | contract | given no token, when POST, then 401 |
-| T4  | create·db-timeout | C4 | integration | given DB timeout, then 503 + no partial write |
+## Plan — index (one row per test = per grid cell)
+`요약`은 **조건 → 기대결과가 한 문장에** 담기게. 표만 훑어도 무엇을 검증하는지 알 수 있어야 함.
+| TID | Cell (00-grid) | Case (A) | Layer | 요약 (조건 → 기대결과) |
+|-----|----------------|----------|-------|------------------------|
+| T1  | create·valid | C1 | integration | 인증된 사용자가 유효 바디로 POST하면 201과 함께 row가 1건 생성된다 |
+| T2  | create·dup-key | C2 | integration | 이미 존재하는 키로 다시 POST하면 409를 주고 row를 추가로 만들지 않는다(멱등) |
+| T3  | create·unauthenticated | C3 | contract | 토큰 없이 POST하면 401을 주고 어떤 쓰기도 하지 않는다 |
+| T4  | create·db-timeout | C4 | integration | 쓰기 중 DB가 타임아웃나면 503을 주고 부분쓰기 없이 롤백된다 |
+
+## Test Spec — per test (QA가 읽고 직접 검증·보완하는 본문)
+각 테스트가 무슨 조건에서 / 어떤 스텝으로 / 무엇을 검증하는지 + **QA가 실행 중인 API에 직접 확인하는 절차**와 **추가로 의심해볼 변형**. QA는 이 섹션만 읽고 (1) curl/Postman+DB조회로 재현해 검증하고 (2) 빠진 케이스를 새 grid cell로 제안할 수 있어야 함.
+
+### T2 · 중복 키 생성은 멱등 처리
+- **Cell / Layer:** create·dup-key / integration (실제 DB·라우트)
+- **검증 목적:** 같은 키로 두 번 생성 요청이 와도 데이터가 중복되지 않고 일관된 충돌 응답을 준다.
+- **전제조건:** 인증된 사용자. `orders`에 `key="K1"` row가 **이미 존재**. 같은 사용자/권한.
+- **요청·조건:** `POST /orders { key: "K1", ... }` (기존과 동일 키).
+- **자동 테스트 스텝:** ① 시드: `key="K1"` row 1건 삽입 ② 동일 키로 `POST /orders` 호출 ③ 응답 상태·바디 확인 + DB row 수 재조회.
+- **기대결과:** `409` 반환, 에러 바디에 충돌 표시. `orders`의 `key="K1"` row는 **여전히 1건**(중복 삽입 없음). 후속 큐 발행 등 부작용 없음.
+- **🔍 수동 QA (실행 중 API):**
+  1. `curl -X POST .../orders -H "Authorization: Bearer <t>" -d '{"key":"K1",...}'` 를 **두 번** 실행.
+  2. 두 번째 응답이 409인지 확인.
+  3. `SELECT count(*) FROM orders WHERE key='K1';` → **1** 인지 DB로 직접 확인.
+- **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 두 요청이 **동시(병렬)** 로 오면? 같은 키 + **다른 바디**면 409인가 덮어쓰기인가? 다른 사용자가 같은 키를 쓰면? 키 대소문자/공백 차이는 같은 키로 보나?
+
+### T4 · DB 타임아웃 시 부분쓰기 금지
+- **Cell / Layer:** create·db-timeout / integration
+- **검증 목적:** 쓰기 도중 인프라 장애가 나도 데이터가 반쪽만 남지 않고(원자성) 안전한 에러를 준다.
+- **전제조건:** 인증된 사용자. DB 레이어가 쓰기 중 타임아웃을 던지도록 stub/주입.
+- **요청·조건:** `POST /orders { ...valid }` 도중 DB 타임아웃 발생.
+- **자동 테스트 스텝:** ① DB write가 타임아웃을 던지게 설정 ② 유효 바디로 `POST /orders` 호출 ③ 응답 + 트랜잭션 후 테이블 상태 확인.
+- **기대결과:** `503` 반환. 트랜잭션 롤백되어 **새 row 없음**(부분쓰기 0). 민감정보(스택트레이스·쿼리)가 에러 메시지로 새지 않음.
+- **🔍 수동 QA (실행 중 API):** 보통 자동 테스트로만 재현(타임아웃 주입). 수동이면 DB `statement_timeout`을 아주 낮게 잡거나 네트워크 지연을 걸고 POST → 503 확인 후 `SELECT count(*)` 로 row가 안 늘었는지 확인.
+- **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 다단계 쓰기(주문+결제) 중간 실패 시 앞 단계도 롤백되나? 타임아웃과 **커넥션 끊김**이 같은 503인가? 재시도 시 중복 생성되나(멱등키 연계)? 로그엔 어디까지 남나?
 
 ## Report  (appended P10)
 - Runner: <vitest x.y>  |  E2E: <playwright x.y>
@@ -230,7 +259,7 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 ---
 
 ## Traceability Matrix (05-traceability.md)
-The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
+The coverage proof — **one row per grid cell** (from `00-behavior-grid.md`), not per prose case, drafted in Phase 5 (status `TODO`) and filled in Phase 10. Starting from cells (not cases) is what stops a class from vanishing between the grid and the tests. An empty cell means unfinished work; never hide one.
 
 ```markdown
 # Traceability — <feature>
@@ -241,18 +270,20 @@ The coverage proof — **one row per grid cell** (from `00-gap-analysis.md`), no
 | create·unauthenticated | C3 | T3 | authGuard | ✅ |
 | create·db-timeout (complement) | C4 | — | — | ⚠️ TODO |
 ```
-Done = **every grid cell** has a row with no `TODO`/`—` for in-scope cells. A cell with no test is a visible hole. Out-of-scope deferrals must be stated (`deferred`), not blank.
+Done = coverage holds in **both directions**: (1) **forward** — every behavior in the resolved spec maps to ≥1 grid cell (nothing well-specified was dropped before the grid; this row-set is a complete decomposition of the whole spec, not just its gaps); (2) **back** — **every grid cell** has a row with no `TODO`/`—` for in-scope cells (a cell with no test is a visible hole). Out-of-scope deferrals must be stated (`deferred`), not blank.
 
 ---
 
 ## Review (per-round files, `v<N>/06-review/r<k>.md`)
-The Phase-10 review loop. **Each round is a separate file** produced by an **independent reviewer** (a fresh subagent — never the author/main loop) that re-reads the *current* code: `06-review/r1.md`, `06-review/r2.md`, … All kept; never edit a prior round's file. Write each like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending code snippet, why it matters, the fix as code** — plus a "what's good" section and a one-line summary. Not a terse table. (A round is a genuine re-run, not an edit asserting "fixed".)
+The Phase-10 review loop. **Each round is a separate file** (`06-review/r1.md`, `r2.md`, …); all kept, never edit a prior round's file. Each round has **two clearly-labeled parts**:
+- **Discovery (blind)** — produced by an **independent reviewer** (fresh subagent, never the author/main loop) that sees **only the current diff + resolved spec, never a prior round**. This is why discovery findings are *re-found fresh* each round rather than carried over — feeding the reviewer r1 would anchor it. Write like a **real PR review** (bar = GitHub `@claude review`): findings **grouped by severity**, each with **exact `file:line`, the offending snippet, why it matters, the fix as code**, plus a "what's good" section and a one-line summary. Not a terse table.
+- **Closure (not blind)** — a short table confirming each prior round's `fix`-dispositioned finding actually landed in the current diff. This *needs* the prior round as input, so the **main loop writes it (not the blind reviewer)** and the section is **explicitly marked non-blind**. From r2 onward only.
 
 ```markdown
 # Review — <feature>
 
 ## Round 1
-reviewer: code-reviewer   scope: <files reviewed>   suite: <N/M green>
+reviewer: code-reviewer (blind — diff + resolved spec only)   scope: <files reviewed>   suite: <N/M green>
 
 전반적으로 <1–2문장 총평>.
 
@@ -280,7 +311,16 @@ if (error) return redirect(error.code === '23505' ? '/err?dup' : '/err')
 **요약:** <what must change (critical) vs recommended>.
 
 ## Round 2
-(re-review after fixes — reuse ids, mark ✅ resolved; never overwrite Round 1)
+reviewer: code-reviewer (blind — diff + resolved spec only, did NOT see Round 1)   suite: <N/M green>
+
+### 🔵 Closure of Round 1 (main loop — NOT blind)
+| R1 finding | disposition | landed in diff? | evidence |
+|------------|-------------|-----------------|----------|
+| R1 critical — <title> | fix | ✅ | `file.ts:53` now checks error |
+| R2 major — <title> | defer(F) | n/a — deferred | `deferred.md#f-2` |
+
+### Discovery (blind, this round)
+(new findings the fresh reviewer found in the current code — independent of R1's ids; never overwrite Round 1)
 ```
 
 Each finding carries id, severity (`critical/blocker` · `major` · `minor`), `file:line`, the **code snippet**, the **fix as code**, and a **disposition the user sets** (`fix` / `defer(F)` / `reject`). The loop passes only when no open critical/major remain **and** the user approves the latest round. Produce the findings; the user dispositions — never both.

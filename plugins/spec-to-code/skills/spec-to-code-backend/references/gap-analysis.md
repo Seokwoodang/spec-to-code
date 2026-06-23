@@ -56,7 +56,9 @@ This is the concrete net for "AI implemented the `if` but not the `else`."
 
 ## Enumerate, don't eyeball — the MANDATORY filled-grid artifact
 
-This is **not optional and not gated on spec size.** Every run produces `00-gap-analysis.md` (the gap matrix) before the resolved spec. "The spec looks well-defined" is **not** grounds to skip it — re-architecture (new persistence, new auth model, sync→async, added endpoints) introduces branches the source never had, and those are exactly what eyeballing misses. Prose "be exhaustive" has failed before; the forcing function is the **filled table**, where "did we think of every case?" becomes "is any cell empty?".
+> **The grid is the FULL behavior decomposition of the whole spec — not a list of holes.** The filename says "gap-analysis" because the *process* hunts gaps, but the *artifact* enumerates **every** behavior of the endpoint/service, the clearly-specified happy paths included (e.g. `create·valid` is a cell too). A "gap" is just a cell that started empty; resolving it fills the grid. So the **test basis is the entire resolved spec**, decomposed into cells — never only the ambiguous parts. Coverage is therefore **bidirectional**: every resolved-spec behavior maps to ≥1 cell (nothing in the spec is dropped before the grid), and every cell maps to ≥1 test (nothing in the grid is left untested). The first direction is what stops a well-defined requirement from never becoming a cell — and thus never a test.
+
+This is **not optional and not gated on spec size.** Every run produces `00-behavior-grid.md` (the full behavior grid) before the resolved spec. "The spec looks well-defined" is **not** grounds to skip it — re-architecture (new persistence, new auth model, sync→async, added endpoints) introduces branches the source never had, and those are exactly what eyeballing misses. Prose "be exhaustive" has failed before; the forcing function is the **filled table**, where "did we think of every case?" becomes "is any cell empty?".
 
 1. **List the axes** (the variables): request inputs/params/body, auth/roles/permissions, resource & DB states (absent/exists/stale/locked), feature flags, downstream-call outcomes (ok/empty/error/timeout/partial), concurrency (retry, idempotency, race). *This step is judgment — list every axis you can think of; a missed **axis** (not a missed combination) is the residual risk enumeration can't close, so it is handed to the critic (below).*
 2. **Take the cartesian product** — every combination is a row/cell.
@@ -78,7 +80,7 @@ So: **enumeration is unconditional; fan-out is the mechanism above the threshold
 
 ## Adversarial completeness critic — REQUIRED before Gate 1
 
-The grid guarantees coverage *within listed axes*; it cannot prove no axis was forgotten. Close that with one mandatory adversarial pass: after the grid is filled, spawn a critic (a fresh `gap-hunter`/`Explore` whose **only** job is to refute completeness) prompted to find: **(a) an empty/▢ cell, (b) an axis nobody listed, (c) a stated conditional with no complement row, (d) a requirement that resists becoming a test.** Its findings are folded back into `00-gap-analysis.md` before the resolved spec is written. This is the LLM-level check the hook cannot do (a hook sees only *presence*, never *completeness*).
+The grid guarantees coverage *within listed axes*; it cannot prove no axis was forgotten. Close that with one mandatory adversarial pass: after the grid is filled, spawn a critic (a fresh `gap-hunter`/`Explore` whose **only** job is to refute completeness) prompted to find: **(a) an empty/▢ cell, (b) an axis nobody listed, (c) a stated conditional with no complement row, (d) a requirement that resists becoming a test.** Its findings are folded back into `00-behavior-grid.md` before the resolved spec is written. This is the LLM-level check the hook cannot do (a hook sees only *presence*, never *completeness*).
 
 ## Severity tagging
 
@@ -98,14 +100,15 @@ Tag each gap so questioning can prioritize and so trivial items don't drown the 
 ## Exit condition (hard checklist — all must hold before Gate 1)
 
 Phase 2/3 is done only when **every** box is true:
-- [ ] `00-gap-analysis.md` exists in `v<N>/` with the **axes list** + decision table(s)/state×event matrix(es), **zero empty cells** (each is a decision or a flagged GAP).
+- [ ] `00-behavior-grid.md` exists in `v<N>/` with the **axes list** + decision table(s)/state×event matrix(es), **zero empty cells** (each is a decision or a flagged GAP).
+- [ ] **Forward coverage:** every behavior stated in the spec maps to ≥1 grid cell — the grid is a *complete decomposition of the whole spec*, not just its ambiguous parts (well-defined happy paths are cells too). Walk the spec once and confirm nothing well-specified was left out of the grid.
 - [ ] Fan-out trigger evaluated and obeyed (fan-out run if ≥2 endpoints/resources/sections or ≥3 rules/transitions; noted either way).
 - [ ] Adversarial completeness critic run; its findings resolved or parked.
 - [ ] Every stated conditional has its complement ("not-X") row.
 - [ ] Zero BLOCKER/BEHAVIORAL gaps open; every TRIVIAL assumed-default listed for veto.
 - [ ] Every resolved item is expressible as a test case (given/when/then). Anything that resists → back to the user.
 
-**Structurally enforced:** the gate-guard hook blocks writing `02-resolved-spec.md` until `00-gap-analysis.md` exists in the same `v<N>/` — you cannot reach the contract without first producing the grid. (The hook checks *presence*; this checklist + the critic cover *completeness*.)
+**Structurally enforced:** the gate-guard hook blocks writing `02-resolved-spec.md` until `00-behavior-grid.md` exists in the same `v<N>/` — you cannot reach the contract without first producing the grid. (The hook checks *presence*; this checklist + the critic cover *completeness*.)
 
 ---
 

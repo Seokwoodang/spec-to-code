@@ -352,6 +352,17 @@ What lands here:
 ```
 Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. **Revisit when** is a concrete condition or date, never blank — a parked item with no trigger is a lost item.
 
+**The table is an index, not the spec of the work.** A one-line `Item` ("retry on 503") is not enough to pick the work up cold. For anything **`blocked-on` or integration-pending** (e.g. a UI built against a not-yet-shipped API), add a **detail block** below the table that states exactly **어디(Where) · 무엇이 빠졌나(What) · 무엇이 충족되면 끝(Done-when)**, so a future session/person can act without re-deriving it:
+
+```markdown
+### F2 · retry on 503  (blocked-on backend)
+- **Where:** `src/api/orders.ts:42` `submitOrder()` — 현재 503에서 그냥 throw, 재시도 없음. UI는 `<ErrorBanner>`만 표시.
+- **What's missing:** 서버가 `Retry-After` 헤더를 줘야 함 → 클라가 그 값만큼 자동 재시도 후 실패 시에만 배너.
+- **Done when:** `/orders`가 `Retry-After`를 반환(백엔드 티켓 #123 배포)되면 → honoring 로직 구현 + 테스트 `T9` un-skip.
+- **Stub now:** 503이면 즉시 배너(재시도 없이) — 임시 동작임을 코드 주석 `// TODO(F2)` 로 표시.
+- **Linked:** spec `A:C3` · traceability `submit·error-503`(deferred) · test `T9`(skipped, reason=F2).
+```
+
 **No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its traceability row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
 
 ---

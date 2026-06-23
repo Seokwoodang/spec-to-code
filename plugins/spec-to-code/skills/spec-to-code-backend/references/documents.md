@@ -348,6 +348,17 @@ What lands here:
 ```
 Reason ∈ `blocked-on <X>` / `out-of-scope` / `postponed` / `needs-decision`. **Revisit when** is a concrete condition or date, never blank — a parked item with no trigger is a lost item.
 
+**The table is an index, not the spec of the work.** A one-line `Item` ("retry on 503") is not enough to pick the work up cold. For anything **`blocked-on` or integration-pending** (e.g. a handler stubbed against a not-yet-ready upstream service or migration), add a **detail block** below the table that states exactly **어디(Where) · 무엇이 빠졌나(What) · 무엇이 충족되면 끝(Done-when)**, so a future session/person can act without re-deriving it:
+
+```markdown
+### F2 · 결제 캡처 연동  (blocked-on payments service)
+- **Where:** `src/services/order.ts:88` `capturePayment()` — 현재 `return { ok: true }` 로 **mock**, 실제 PSP 호출 없음.
+- **What's missing:** 결제 서비스의 `POST /capture` 계약 미확정(멱등키·부분환불 응답 형태). 외부 팀 대기.
+- **Done when:** payments 팀이 `/capture` 계약 확정·스테이징 배포되면 → 실제 호출+에러매핑 구현, 통합테스트 `T7`(skipped) un-skip, 멱등 셀 `capture·dup` 추가 검토.
+- **Stub now:** 항상 성공 반환 — `// TODO(F2)` 주석 + 통합테스트는 `test.skip(reason=F2)`.
+- **Linked:** spec `A:C7` · traceability `order·capture`(deferred) · test `T7`(skipped, reason=F2).
+```
+
 **No silent drop rule:** if a parked item corresponds to an Artifact-A case, that case does not just vanish — its test is marked skipped/pending *with a reason that points to the F id*, and its traceability row is marked `deferred` (not empty, not passing). An empty B cell still means unfinished; a `deferred` cell means consciously parked and tracked here.
 
 ---

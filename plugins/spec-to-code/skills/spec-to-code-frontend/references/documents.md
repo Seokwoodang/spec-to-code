@@ -215,13 +215,16 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 
 ## Plan — index (one row per test = per grid cell)
 `요약`은 **조건 → 기대결과가 한 문장에** 담기게. 표만 훑어도 무엇을 검증하는지 알 수 있어야 함.
+Layer ∈ `logic` (pure) / `component` (one component in isolation, Testing Library) / `ui-flow` (cross-component E2E, Playwright) / `appearance` (screenshot).
 | TID | Cell (00-grid) | Case (A) | Layer | 요약 (조건 → 기대결과) |
 |-----|----------------|----------|-------|------------------------|
 | T1  | search·title-match | C5 | logic | 검색어가 **제목에만** 포함된 매물이 있을 때, 그 매물만 반환하고 지역·타입만 맞는 건 제외한다 |
 | T2  | search·region-match | C5 | logic | 검색어가 **지역명에만** 일치하는 매물이 있을 때, 그 매물만 반환한다 |
 | T3  | search·no-match | C5 | logic | 어떤 필드와도 일치하지 않는 검색어면 빈 배열을 반환한다(throw 없음) |
 | T4  | sort·empty-list | C8 | logic | 빈 목록을 정렬하면 예외 없이 빈 배열을 그대로 반환한다 |
-| T5  | error-state·render | C3 | ui-behavior | 검색 API가 500을 반환하면, 결과 리스트 대신 에러 배너+"다시 시도"가 뜨고 이전 결과는 사라진다 |
+| T7  | results·empty-state | C2 | component | `<ResultList items={[]}/>` 를 렌더하면 "검색 결과 없음" 카피가 보이고 카드는 0개다 |
+| T8  | card·saved-state | C9 | component | `<HeartButton saved/>` 는 pressed 상태(aria-pressed=true)로 렌더된다 |
+| T5  | search-flow·error | C3 | ui-flow | 검색 API가 500을 반환하면, 결과 리스트 대신 에러 배너+"다시 시도"가 뜨고 이전 결과는 사라진다 |
 
 ## Test Spec — per test (QA가 읽고 직접 검증·보완하는 본문)
 각 테스트가 무슨 조건에서 / 어떤 스텝으로 / 무엇을 검증하는지 + **QA가 앱에서 직접 확인하는 절차**와 **추가로 의심해볼 변형**. QA는 이 섹션만 읽고 (1) 직접 재현해 검증하고 (2) 빠진 케이스를 새 grid cell로 제안할 수 있어야 함.
@@ -233,11 +236,20 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 - **입력·조건:** `q = "오피스텔"` (①의 제목에만 매칭).
 - **자동 테스트 스텝:** ① `searchListings(listings, "오피스텔")` 호출.
 - **기대결과:** `[①]` 반환(길이 1), ②③ 제외. (대소문자·공백 boundary는 T2/T3·별도 셀)
-- **🔍 수동 QA:** 순수 함수라 앱 UI 없이 검증 — 콘솔/REPL에서 `searchListings(샘플, "오피스텔")` 실행해 ①만 나오는지 확인. 또는 T7(UI)로 검색창에 입력해 카드 1개만 뜨는지 교차 확인.
+- **🔍 수동 QA:** 순수 함수라 앱 UI 없이 검증 — 콘솔/REPL에서 `searchListings(샘플, "오피스텔")` 실행해 ①만 나오는지 확인.
 - **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 부분일치 vs 정확일치? "오피스텔" 대문자/영문/유니코드? 제목+지역 동시 일치 시 중복 없이 1건? 특수문자(`%`,`_`) 검색?
 
-### T5 · 에러 상태 배너 표시
-- **Cell / Layer:** error-state·render / ui-behavior (Playwright, 실제 브라우저)
+### T7 · 빈 결과 컴포넌트 렌더 (component, 격리)
+- **Cell / Layer:** results·empty-state / component (Testing Library + jsdom, 단일 컴포넌트)
+- **검증 목적:** `<ResultList>` 가 빈 목록을 받으면 빈-상태 카피를 렌더하고 카드를 그리지 않는다 (네트워크·라우팅과 무관한 순수 렌더 계약).
+- **전제조건:** 컴포넌트만 mount. props로 `items={[]}` 주입.
+- **자동 테스트 스텝:** ① `render(<ResultList items={[]} />)` ② `getByText('검색 결과가 없습니다')` ③ `queryAllByRole('article')`.
+- **기대결과:** 빈-상태 카피 visible, 카드(`article`) 0개. (E2E 아님 — props만 바꿔 빠르게 검증)
+- **🔍 수동 QA:** Storybook 등으로 `items=[]` 스토리를 열어 카피가 뜨는지 확인. (전체 플로우는 T5에서)
+- **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** `items={undefined}`/null이면? 1건일 때 복수형 카피 안 쓰나? 카피에 CTA(필터 초기화) 있어야 하나?
+
+### T5 · 검색 에러 플로우 (ui-flow, E2E)
+- **Cell / Layer:** search-flow·error / ui-flow (Playwright, 실제 브라우저 — 네트워크·다단계라 E2E)
 - **검증 목적:** 검색 중 서버 오류(500)가 나면 사용자에게 에러를 알리고 재시도 수단을 주며, 깨진 이전 결과를 남기지 않는다.
 - **전제조건:** 검색 API를 HTTP 500으로 stub. 결과가 한 번 떠 있는 상태에서 재검색.
 - **입력·조건:** 검색 실행 → 서버 500 응답.

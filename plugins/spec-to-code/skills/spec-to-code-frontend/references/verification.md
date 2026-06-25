@@ -1,17 +1,21 @@
-# Verification — the 3-layer test stack
+# Verification — the 4-layer test stack (a testing pyramid)
 
-The flow proves correctness in three layers, each matched to what it can actually verify. Logic and UI-behavior are caught by tests (written first, TDD); UI-appearance is caught by screenshots blessed once by the user, then guarded automatically.
+The flow proves correctness in four layers, each matched to what it can actually verify — and sized like a **pyramid**: many fast logic + component-render unit tests at the base, fewer end-to-end flows above, a thin appearance cap on top. Logic, component-render, and UI-flow are caught by tests (written first, TDD); UI-appearance is caught by screenshots blessed once by the user, then guarded automatically.
 
 | Layer | What it proves | Tool | When written |
 |-------|----------------|------|--------------|
-| Logic | rules, calculations, state machines, error handling | unit tests (Vitest/Jest/pytest/…) | **before** impl (RED→GREEN) |
-| UI behavior | state→view mapping, interactions, conditional render, error display | Playwright E2E (real browser) — or Testing Library if no Playwright | before/with UI impl |
-| UI appearance | pixels, layout, alignment, style | Playwright `toHaveScreenshot()` | after impl; baseline blessed at Gate 2 |
+| 1 · Logic | rules, calculations, state machines, error handling (pure, no DOM) | unit tests (Vitest/Jest/…) | **before** impl (RED→GREEN) |
+| 2 · Component render | a **single component in isolation**: props → rendered output, conditional-render branches, local state, event-handler wiring, roles/labels/a11y | component unit tests (Testing Library / Vue Test Utils / etc. + jsdom) | **before**/with that component |
+| 3 · UI flow (behavior) | **cross-component** journeys: navigation/routing, multi-step interactions, focus management, real events & network, layout-dependent behavior | Playwright E2E (real browser) | with UI impl |
+| 4 · UI appearance | pixels, layout, alignment, style | Playwright `toHaveScreenshot()` | after impl; baseline blessed at Gate 2 |
+
+**Which layer for a render?** If it's "given these props/state, does *this one component* render the right thing?" → **Layer 2** (fast, isolated, the bulk of UI tests). If it's "does the *flow across components/pages* behave?" (search → results → click → detail, focus moving, real fetch) → **Layer 3**. Don't push a single-component render assertion up into E2E — that's slow and brittle for what a component unit test does better.
 
 ## Detecting tools (Phase 1)
 - **Test runner**: read `package.json` scripts/deps, config files (`vitest.config`, `jest.config`), or language equivalent (`pytest`, `go test`). Use the project's existing runner; do not introduce a new one without asking.
-- **Playwright**: check deps and `playwright.config.*`. If a UI exists and Playwright is absent, offer to add it (`npm i -D @playwright/test && npx playwright install`) — install only with user consent. If the user declines, fall back to Testing Library for UI behavior and to manual run + screenshot for appearance, and say so.
-- **No UI** (CLI/library): skip the UI-behavior and appearance layers entirely; logic TDD carries the whole verification.
+- **Component test lib (Layer 2)**: detect the framework's render-testing lib (React/Vue/Svelte Testing Library, etc.) + a jsdom/happy-dom env. Usually already present with the runner; if a UI exists and none is configured, offer to add it (install only with consent). This is a **first-class layer, not a fallback**.
+- **Playwright (Layer 3)**: check deps and `playwright.config.*`. If a UI exists and Playwright is absent, offer to add it (`npm i -D @playwright/test && npx playwright install`) — install only with user consent. If the user declines, push as much UI-behavior as possible down into Layer 2 component tests, do flow checks via manual run, and say so.
+- **No UI** (CLI/library): skip Layers 2–4 entirely; logic TDD carries the whole verification.
 
 ## Layer 1 — Logic TDD
 1. From the Test Plan, write one test **per grid cell** (each equivalence class / boundary / branch-complement from `00-behavior-grid.md`), not one per bundled case — before implementing.
@@ -19,13 +23,18 @@ The flow proves correctness in three layers, each matched to what it can actuall
 3. Implement the smallest logic to go GREEN. Refactor with tests green.
 4. Keep logic pure and import-light so it tests without DOM/network — this enforces the logic/UI split.
 
-## Layer 2 — UI behavior (Playwright E2E)
-- Drive the real browser: render each state, perform interactions, assert the resulting DOM/text/visibility.
-- Cover the state and transition cases from the resolved spec: empty, loading, error, success, disabled, etc.
-- Prefer role/label/text selectors over brittle CSS. Stub network at the boundary for deterministic states.
-- Real-browser E2E beats jsdom here because it exercises actual events, focus, and layout-dependent behavior.
+## Layer 2 — Component render (unit, Testing Library + jsdom)
+- **Mount one component in isolation** and assert on its output — the bulk of UI tests, fast enough to run in the unit suite, written RED→GREEN like logic.
+- Cover **per grid cell**: props → rendered output, each **conditional-render branch** (and its complement), local state changes, **event-handler wiring** (click/change calls the right handler with the right args), and roles/labels/disabled/aria.
+- Stub props/callbacks; no real network or routing. Prefer role/label/text selectors over brittle CSS.
+- This is where "does *this component* render the right thing for this state?" lives — e.g. `<ResultList items={[]}/>` shows the empty copy, `<HeartButton saved/>` renders pressed. Don't promote these to E2E.
 
-## Layer 3 — UI appearance (screenshot baseline)
+## Layer 3 — UI flow / behavior (Playwright E2E, real browser)
+- Drive the real browser for **cross-component journeys**: navigation/routing, multi-step interactions, focus management, real events, and layout-dependent behavior jsdom can't exercise.
+- Cover the state/transition cases that span components: search → results → click → detail, error→retry→success, etc. Stub network at the boundary for deterministic states.
+- Reserve E2E for what Layer 2 can't do — keep the pyramid: few flows here, many component tests below.
+
+## Layer 4 — UI appearance (screenshot baseline)
 - **First run has no baseline** — `toHaveScreenshot()` can prove "same as before", not "looks correct". So:
   1. Playwright captures a screenshot per relevant state (Phase 9).
   2. The user eyeballs them at Gate 2 and **blesses the baseline** (approves the committed snapshot).

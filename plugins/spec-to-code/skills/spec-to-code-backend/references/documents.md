@@ -246,8 +246,10 @@ Two lives. **Plan** is written in Phase 3 and reviewed at Gate 1 (does this set 
 - **QA가 더 의심해볼 변형(→ 누락 시 gap 제안):** 다단계 쓰기(주문+결제) 중간 실패 시 앞 단계도 롤백되나? 타임아웃과 **커넥션 끊김**이 같은 503인가? 재시도 시 중복 생성되나(멱등키 연계)? 로그엔 어디까지 남나?
 
 ## Report  (appended P10)
-- Runner: <vitest x.y>  |  E2E: <playwright x.y>
-- Result: <N passed / M total>, coverage <if available>
+- Runner: <vitest x.y>  |  test DB: <pg/sqlite/testcontainers>
+- Result: <N passed / M total>
+- **Code coverage** (unit+integration layers): line <L%> · **branch <B%>** · func <F%>. Pure-logic modules branch ≥90%? <yes/no — list misses>.
+- **Uncovered — classified** (no silent gaps): `svc/order.ts:42` else → missing cell `create·dup`(add test) · `repo.ts:30` → integration-only T4 · `legacy.ts:8` → dead, removed · `db.ts:60` → ignore-pragma (커넥션 끊김, 스테이징서만 재현).
 | TID | Status | Notes |
 |-----|--------|-------|
 | T1  | ✅ pass | |
@@ -370,7 +372,11 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 # Verify — <feature>   date: <>
 
 ## Suite
-- runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
+- runner: <vitest/node --test/…>   result: <N/M pass>
+
+## Code coverage (unit+integration layers; diagnostic, not %-to-chase)
+- line <L%> · **branch <B%>** · func <F%>   ·   pure-logic modules branch ≥90%? <yes/no — list misses>
+- **uncovered — classified** (no silent gaps): <`file:line` → missing-cell(add test) / integration-only(note) / dead(removed) / ignore-pragma(reason)>
 
 ## Cell coverage (every 00-grid cell → case → test)
 - total cells: <N>  ·  cells with ≥1 test: <N>  ·  uncovered cells: <list — must be empty or deferred(F#)>

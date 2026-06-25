@@ -48,5 +48,16 @@ Run everything, then audit four dimensions — inline, or as a Workflow fan-out 
 2. **Conformance** — every cell is demonstrably exercised by a test or screenshot **and actually asserted** (the test would fail if the behavior regressed).
 3. **Coverage / traceability** — the matrix has no `TODO`/empty rows; each cell → case → test → code → pass.
 4. **Separation** — logic has no UI imports; UI is thin over tested logic. Flag leaks.
+5. **Code coverage** — measure line/branch/function with the runner (see below). Complements cell coverage: cell coverage proves *spec → test*; code coverage catches *code paths no test touches* (a branch the grid never foresaw). Every uncovered branch is classified, not just counted.
 
 Adversarially verify findings (the `spec-verifier` agent): for each "covered" claim, a skeptic opens the test and checks it asserts *that specific cell* (not a sibling class, not a hollow always-green test). Report empty matrix cells honestly — they are unfinished work, not noise to hide.
+
+## Code coverage (Phase 11) — diagnostic-first, hard bar on pure logic
+Two coverages are complementary: **cell coverage** (primary, behavioral — spec→test) and **code coverage** (this, secondary net — finds code the tests never execute). Code coverage is a *diagnostic to find untested branches*, **not a percentage to chase** — a global %-gate breeds hollow tests, which is exactly what this flow forbids.
+
+- **Tool:** the project runner's coverage — Vitest `--coverage` (v8/istanbul) or Jest `--coverage`. Instrument **Layers 1+2** (logic + component unit, jsdom) — cheap and reliable. **Layer 3 (Playwright E2E) is best-effort** (instrumentation is heavy); flow assurance comes from cell coverage, not E2E line counts.
+- **Key metric = branch coverage.** It ties directly to gap-analysis **branch-complement**: an uncovered branch is often a missing not-X. Report line/branch/function/statement.
+- **Hard bar — pure logic only:** Layer-1 logic modules must hit **≥90% branch** (they are fully testable; below that = real gaps). **Components (Layer 2): report, no blanket %-fail** — some branches are visual and covered by E2E/screenshot, so a number alone misleads.
+- **The teeth = classify every uncovered line/branch** (no silent uncovered code, mirroring "no empty cell"): (a) **missing cell** → add the test (and the grid row); (b) **covered only by E2E/appearance** → note which layer; (c) **dead code** → remove it; (d) **justified ignore** → inline `/* c8 ignore next -- <reason> */`. An unclassified uncovered branch fails the audit.
+- **Exclude** config, generated code, type-only files, stories, and the test files themselves.
+- **Record** the numbers + the uncovered-classification in `04-test-doc.md` Report and `07-verify.md`.

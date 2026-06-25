@@ -35,3 +35,12 @@ Pure domain logic with no DB/HTTP imports → fast unit tests, RED→GREEN. This
 
 ## Comprehensive verify (Phase 11)
 Run everything, then audit: **bidirectional cell coverage** — *forward:* every resolved-spec behavior → ≥1 grid cell (the grid is a complete decomposition of the whole spec, not just its gaps — a well-defined requirement that never became a cell is an untested behavior); *back:* every `00-behavior-grid.md` cell → case → test (count cells/covered/uncovered — catches a class lost between grid and tests) — conformance (every cell exercised **and actually asserted**), traceability filled, **logic/IO separation** (domain free of framework/DB imports). The `spec-verifier` agent adversarially checks each "covered" claim against the actual test — a contract test that doesn't assert the error code, an integration test hitting mocks instead of a DB, or a test asserting a sibling class, is hollow. Report gaps honestly.
+
+## Code coverage (Phase 11) — diagnostic-first, hard bar on pure logic
+Complements cell coverage: cell coverage proves *spec→test*; code coverage catches *code paths no test executes* (a branch the grid never foresaw). It is a **diagnostic to find untested branches, not a percentage to chase** — a global %-gate breeds hollow tests, which this flow forbids.
+- **Tool:** the project runner's coverage — Vitest/Jest `--coverage`, `pytest --cov`, `go test -cover`, etc. Instrument **unit (logic) + integration** layers. Contract/E2E line counts are best-effort; behavioral assurance comes from cell coverage.
+- **Key metric = branch coverage** (ties to gap-analysis branch-complement — an uncovered branch is often a missing not-X). Report line/branch/function.
+- **Hard bar — pure domain logic only:** logic modules **≥90% branch** (fully testable). **Handlers/repositories/integration glue: report, no blanket %-fail** (some branches are infra/error paths exercised only under integration).
+- **The teeth = classify every uncovered line/branch** (no silent uncovered code): (a) **missing cell** → add test + grid row; (b) **covered only by integration/contract** → note the layer; (c) **dead code** → remove; (d) **justified ignore** → inline ignore pragma + reason. An unclassified uncovered branch fails the audit.
+- **Exclude** config, generated code, migrations-as-data, type-only files, and test files themselves.
+- **Record** the numbers + uncovered-classification in `04-test-doc.md` Report and `07-verify.md`.

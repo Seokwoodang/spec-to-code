@@ -263,7 +263,9 @@ Layer ∈ `logic` (pure) / `component` (one component in isolation, Testing Libr
 
 ## Report  (appended P10)
 - Runner: <vitest x.y>  |  E2E: <playwright x.y>
-- Result: <N passed / M total>, coverage <if available>
+- Result: <N passed / M total>
+- **Code coverage** (logic+component layers): line <L%> · **branch <B%>** · func <F%>. Pure-logic modules branch ≥90%? <yes/no — list misses>.
+- **Uncovered — classified** (no silent gaps): `lib/x.ts:42` else-branch → missing cell `sort·desc` (add test) · `Card.tsx:30` → covered by E2E T5 · `legacy.ts:8` → dead, removed · `api.ts:60` → `/* c8 ignore */` (네트워크 단절, 통합환경서만 재현).
 | TID | Status | Notes |
 |-----|--------|-------|
 | T1  | ✅ pass | |
@@ -386,7 +388,11 @@ Produced after the review loop passes, handed to the user before Gate 2. Reports
 # Verify — <feature>   date: <>
 
 ## Suite
-- runner: <vitest/node --test/…>   result: <N/M pass>   coverage: <if any>
+- runner: <vitest/node --test/…>   result: <N/M pass>
+
+## Code coverage (logic+component layers; diagnostic, not %-to-chase)
+- line <L%> · **branch <B%>** · func <F%>   ·   pure-logic modules branch ≥90%? <yes/no — list misses>
+- **uncovered — classified** (no silent gaps): <`file:line` → missing-cell(add test) / E2E-only(note) / dead(removed) / `c8 ignore`(reason)>
 
 ## Cell coverage (every 00-grid cell → case → test)
 - total cells: <N>  ·  cells with ≥1 test: <N>  ·  uncovered cells: <list — must be empty or deferred(F#)>

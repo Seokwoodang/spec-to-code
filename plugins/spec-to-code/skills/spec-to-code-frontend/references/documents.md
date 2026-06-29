@@ -1,5 +1,7 @@
 # Artifacts — templates & guidance
 
+**Language:** write every document and its prose in **Korean (한글)**; keep code, identifiers, file paths, cell names, and API/field names in English. (The templates below use English headings for reference — fill the content in Korean.)
+
 The documents are the user's verification surface — they let the user confirm the work without reading all the code. Each is handed over at the gate where it's approved: `02-resolved-spec.md` at Gate 1; `03-design.md` + `04-test-doc.md`(plan) at the Tests gate; `06-review/r<k>.md` during the review loop; `07-verify.md` + `08-completion.md` + filled `05-traceability.md` + `deferred.md` at Gate 2. **Filenames are descriptive — no cryptic A/B/C letters.**
 
 ## Storage, naming & format (authoritative)

@@ -38,51 +38,63 @@
 
 | 커맨드 | 영역 | 전문화 |
 |---|---|---|
-| `/spec-to-code-frontend` (별칭 `/spec-to-code`) | 프론트/UI | Playwright UI동작·스크린샷 · 컴포넌트 설계 |
-| `/spec-to-code-backend` | 서버/API/DB | 통합·계약·마이그레이션 테스트 · 엔드포인트/스키마 · 인증/멱등성/트랜잭션 갭 |
-| `/spec-to-code-fullstack` | 양쪽 | 얇은 조율자 — API 계약 합의 → backend → frontend (각 절반 그대로 전문 실행) |
+| [`/spec-to-code-frontend`](#-프론트엔드--spec-to-code-frontend) (별칭 `/spec-to-code`) | 프론트/UI | 4-layer 테스트(로직·컴포넌트·E2E·스크린샷) · 컴포넌트 설계 |
+| [`/spec-to-code-backend`](#-백엔드--spec-to-code-backend) | 서버/API/DB | 통합·계약·마이그레이션 테스트 · 엔드포인트/스키마 · 인증/멱등성/트랜잭션 갭 |
+| [`/spec-to-code-fullstack`](#-풀스택--spec-to-code-fullstack) | 양쪽 | 얇은 조율자 — API 계약 합의 → backend → frontend |
 
-단일 영역은 front/back 직접, 양쪽은 fullstack. `/spec-to-code` 는 frontend 별칭(기존 호환).
-
-## 사용법
-
-기획서를 던지기만 하면 됩니다 (포맷 자유: md · HTML · PDF · 이미지/Figma · URL · 붙여넣기):
+사용법은 기획서를 던지기만 (포맷 자유: md · HTML · PDF · 이미지/Figma · URL · 붙여넣기):
 
 ```
 /spec-to-code-frontend  movie-booking.html
 /spec-to-code-backend   api-spec.md
-/spec-to-code-fullstack  feature.md
+/spec-to-code-fullstack feature.md
 ```
 
-이후 **사용자가 개입하는 건 세 군데** (나머지 갭조사·구현·검증은 자동). 각 게이트는 **문서 파일을 열어 읽고 승인/수정**:
+---
+
+## 공통 척추 (frontend · backend 공통)
+
+두 스킬은 같은 **12-페이즈 게이트 TDD 흐름**을 공유합니다. 차이는 **테스트 레이어 · 검증 방법 · 설계 초점**뿐 — 각 파트에서 설명합니다. 공통 원리:
+
+- **갭은 사용자가 결정** — 추론하지 않고 묻는다. 테스트로 못 쓸 만큼 모호하면 그것도 갭.
+- **`00-behavior-grid.md` 필수** — 축(입력·상태·역할·외부호출 결과…)×값을 카르테시안 곱으로 **빈 칸 없이** 채운 격자. 테스트 커버리지의 단위(셀). 이게 있어야 `02-resolved-spec.md` 를 쓸 수 있음(훅 강제). 멀티스크린/멀티엔드포인트면 `gap-hunter` 팬아웃 + 적대적 크리틱 필수.
+- **양방향 커버리지** — *모든 기획서 동작 → ≥1 셀* (forward) **그리고** *모든 셀 → ≥1 테스트* (back). 둘 다 확인해 빠진 동작·안 짠 테스트를 모두 잡음.
+- **게이트는 문서로** — 하드스톱마다 MD 파일을 만들어 경로를 주고, 당신이 읽고 승인/수정. 채팅 표 아님.
+- **훅으로 강제** — 설계(`03-design.md`) 승인 전엔 코드/테스트 작성 차단, 리뷰 승인 전엔 완료 문서 차단 (scoped·fail-open).
+- **독립 blind 리뷰** — 작성자가 아닌 리뷰어가 *이전 라운드도 안 보고* 매 라운드 새로 발견 + 별도 non-blind closure 확인.
+- **모든 산출 문서는 한글.** 코드·식별자·파일명·셀 이름은 영어.
+
+**사용자 개입은 세(+리뷰 루프) 군데** — 나머지 갭조사·구현·검증은 자동:
 
 | 체크포인트 | 받는 것 | 하는 것 |
 |---|---|---|
 | 🚪 **Gate 1** (코딩 전) | 갭 질문 → `02-resolved-spec.md` | 빈 곳 답하고 → 파일 승인 |
 | 🚪 **Tests gate** (구현 전) | `03-design.md` + RED 테스트 | 설계·테스트 읽고 → 승인 |
 | 🔁 **리뷰 루프** (반복) | `06-review/r1.md…` (독립 리뷰) | finding별 fix/defer/reject → 통과까지 |
-| 🚪 **Gate 2** (완료) | `08-completion.md` + 검증·스크린샷 | 최종 승인 (커밋은 명시 지시 때만) |
+| 🚪 **Gate 2** (완료) | `08-completion.md` + 검증 | 최종 승인 (커밋은 명시 지시 때만) |
 
-> "꼼꼼히/단계별로" 라고 하면 설계·구현·UI도 각각 멈추는 **step-through** 모드. 작은 변경은 자동으로 **lite**(4단계·1게이트).
-> **"문서까지만 / 구현은 하지마 / 설계+테스트만"** 이라고 하면 **docs scope** — Phase 6까지(확정명세·설계·테스트계획 + RED 테스트)만 만들고 멈춤. 구현은 안 하고(훅이 막은 채) 문서+실패테스트를 핸드오프 → 다른 사람/도구가 GREEN만 만들면 됨.
+> "꼼꼼히/단계별로" 라고 하면 설계·구현·검증도 각각 멈추는 **step-through** 모드. 작은 변경은 자동으로 **lite**(4단계·1게이트).
+> **"문서까지만 / 구현은 하지마 / 설계+테스트만"** → **docs scope**: Phase 6까지(확정명세·설계·테스트계획 + RED 테스트)만 만들고 멈춤. 다른 사람/도구가 GREEN만 만들면 됨.
 
-## 동작 방식
+---
 
-아래 흐름은 **frontend·backend 공통(12 페이즈 척추)** 입니다. **fullstack은 다름** — 12페이즈를 직접 돌지 않고 *API 계약 합의 → backend 실행 → frontend 실행* 으로 두 스킬을 조율합니다.
+## 🖥 프론트엔드 — `/spec-to-code-frontend`
+
+UI 기획서(화면·컴포넌트·상태)를 받아 **상태→화면 매핑과 인터랙션**을 증명하는 흐름.
 
 ```mermaid
 flowchart TD
-  S([기획서 · 어떤 포맷이든]) --> P1[1·2 Ingest·probe·갭분석]
+  S([UI 기획서 · md/HTML/이미지/Figma]) --> P1[1·2 정규화·probe·갭분석]
   P1 --> P3[3 갭 해소]
   P3 --> G1{{🚪 4 Gate 1 · 확정명세 승인}}
-  G1 --> P5[5 설계 doc]
-  P5 --> G2{{🚪 6 Tests gate · 설계+RED테스트 승인}}
-  G2 --> P7[7·8 구현 → GREEN]
-  P7 --> P9[9 검증<br/>FE 스크린샷 / BE 통합·계약]
-  P9 --> R[10 독립 리뷰어]
+  G1 --> P5[5 설계 · 파일·컴포넌트·시그니처]
+  P5 --> G2{{🚪 6 Tests gate · RED 4-layer 승인}}
+  G2 --> P7[7·8 구현 → GREEN<br/>로직 → 얇은 UI]
+  P7 --> P9[9 외관 검증<br/>Playwright 스크린샷 → baseline]
+  P9 --> R[10 독립 blind 리뷰어]
   R --> G3{{🔁 사용자 처분}}
   G3 -->|open 남으면| R
-  G3 --> P11[11 종합 검증]
+  G3 --> P11[11 종합 검증<br/>양방향 셀 + 코드 커버리지]
   P11 --> G4{{🚪 12 Gate 2 · 완료 승인}}
   G4 --> DONE([✅ 완료])
   G1 -.보류.-> F[(deferred · TODO)]
@@ -91,55 +103,123 @@ flowchart TD
   class G1,G2,G3,G4 gate;
 ```
 
-| # | 페이즈 | 산출 | 정지 |
+| # | 페이즈 | 산출 파일 | 정지 |
 |---|--------|------|------|
-| 1 | Ingest & probe | working spec + 환경/모드/tier 판정 | — |
+| 1 | 정규화 & probe | `01-working-spec.md` + 환경/모드/tier 판정 | — |
 | 2 | 갭 분석 | `00-behavior-grid.md` — 전체 동작 격자 (빈 칸 없이) | — |
 | 3 | 갭 해소 | `02-resolved-spec.md` | — |
 | 4 | **🚪 Gate 1** | 확정 명세 승인 | **하드스톱** |
-| 5 | 설계 | `03-design.md`(완벽한 개발문서) + `05-traceability.md` | 🟠 |
-| 6 | **🚪 Tests gate** | RED 테스트 + `04-test-doc.md`, 구현 전 승인 | **하드스톱** |
+| 5 | 설계 | `03-design.md`(파일·컴포넌트·함수 시그니처·동작) + `05-traceability.md`(draft) | 🟠 |
+| 6 | **🚪 Tests gate** | `04-test-doc.md` + **RED 테스트(4-layer)**, 구현 전 승인 | **하드스톱** |
 | 7 | 로직 구현 | 로직 테스트 GREEN | 🟡 |
-| 8 | UI/API 구현 | 동작 테스트 GREEN | 🟡 |
-| 9 | 검증 | FE: Playwright 스크린샷 / BE: 통합·계약 | 🟠 |
-| 10 | **🔁 리뷰 루프** | 독립 리뷰어 → `06-review/r<k>.md`, 통과까지 | **하드스톱** |
+| 8 | UI 구현 | 컴포넌트·플로우 테스트 GREEN | 🟡 |
+| 9 | 외관 검증 | Playwright 스크린샷 → baseline | 🟠 |
+| 10 | **🔁 리뷰 루프** | `06-review/r<k>.md`, 통과까지 | **하드스톱** |
 | 11 | 종합 검증 | `05-traceability.md` 채움 + `07-verify.md` | — |
-| 12 | **🚪 Gate 2** | `08-completion.md` + 패키지 보고 | **하드스톱** |
+| 12 | **🚪 Gate 2** | `08-completion.md` + 패키지 | **하드스톱** |
 
-(🔴 4·6·10·12 = checkpoint 모드 하드스톱 · 🟠🟡 5·7·8·9 = step-through에서 추가 정지 · 1·2·11 = 안 멈춤)
+**이 영역의 특징**
+- **테스트 = 4-layer 피라미드** (`references/verification.md`):
+  1. **로직** (순수, Vitest/Jest — DOM 없음)
+  2. **컴포넌트 렌더** (Testing Library + jsdom — *컴포넌트 격리*: props→출력, 조건부 렌더, 핸들러 배선. UI 테스트의 대부분)
+  3. **UI 플로우** (Playwright E2E — 컴포넌트 간 여정·라우팅·포커스·실네트워크)
+  4. **외관** (스크린샷 — 픽셀·정렬. 사람이 baseline 승인 후 drift 자동 차단)
+- **Phase 9 = 외관 검증** — 상태별 스크린샷을 Gate 2에서 bless → 이후 시각 drift 자동 실패.
+- **설계 초점** — 파일·컴포넌트 분해, props/state, 핸들러, HTML 입력이면 컴포넌트 분해.
+- **코드 커버리지** — 로직+컴포넌트 레이어 계측, **branch 중심**, 순수 로직 모듈 ≥90% (진단 중심).
 
-- **갭은 사용자가 결정** — 추론하지 않고 묻는다. 테스트로 못 쓸 만큼 모호하면 그것도 갭.
-- **게이트는 문서로** — 각 하드스톱마다 MD 파일을 만들어 경로를 주고, 당신이 읽고 승인/수정. 채팅 표 아님.
-- **훅으로 강제** — 설계(`03-design.md`) 승인 전엔 코드/테스트 작성이 차단됨 (scoped·fail-open).
-- **독립 리뷰** — 별도 컨텍스트 리뷰어가 라운드마다 새로 리뷰 (작성자 self-review 금지).
-- **fresh / update** (이전 산출물 유무) · **full / lite** (규모) 자동 판별. 업데이트는 전체 suite 회귀 검사.
+---
 
-## 산출물
+## ⚙️ 백엔드 — `/spec-to-code-backend`
+
+서버/API/DB 기획서를 받아 **계약·인증·데이터·실패 동작**을 증명하는 흐름.
+
+```mermaid
+flowchart TD
+  S([API/서버 기획서]) --> P1[1·2 정규화·probe·갭분석<br/>+ 인증/멱등/트랜잭션 축]
+  P1 --> P3[3 갭 해소]
+  P3 --> G1{{🚪 4 Gate 1 · 확정명세 승인}}
+  G1 --> P5[5 설계 · 엔드포인트·스키마·DB·에러]
+  P5 --> G2{{🚪 6 Tests gate · RED 유닛·통합·계약 승인}}
+  G2 --> P7[7·8 구현 → GREEN<br/>도메인 로직 → 핸들러+영속성]
+  P7 --> P9[9 통합·계약 검증<br/>테스트 DB/스텁 + 계약 적합성]
+  P9 --> R[10 독립 blind 리뷰어<br/>인증·인젝션·tx·N+1 렌즈]
+  R --> G3{{🔁 사용자 처분}}
+  G3 -->|open 남으면| R
+  G3 --> P11[11 종합 검증<br/>양방향 셀 + 코드 커버리지]
+  P11 --> G4{{🚪 12 Gate 2 · 완료 승인}}
+  G4 --> DONE([✅ 완료])
+  G1 -.보류.-> F[(deferred · TODO)]
+  G3 -.보류.-> F
+  classDef gate fill:#1f6feb,color:#fff,stroke:#1f6feb;
+  class G1,G2,G3,G4 gate;
+```
+
+| # | 페이즈 | 산출 파일 | 정지 |
+|---|--------|------|------|
+| 1 | 정규화 & probe | `01-working-spec.md` + 환경(러너·**DB**·프레임워크) 판정 | — |
+| 2 | 갭 분석 | `00-behavior-grid.md` — 전체 동작 격자 (**+ 백엔드 필수 축**) | — |
+| 3 | 갭 해소 | `02-resolved-spec.md` | — |
+| 4 | **🚪 Gate 1** | 확정 명세 승인 | **하드스톱** |
+| 5 | 설계 | `03-design.md`(엔드포인트·스키마·DB·에러모델) + `05-traceability.md`(draft) | 🟠 |
+| 6 | **🚪 Tests gate** | `04-test-doc.md` + **RED 테스트(유닛·통합·계약)**, 구현 전 승인 | **하드스톱** |
+| 7 | 로직 구현 | 도메인 로직 유닛 테스트 GREEN | 🟡 |
+| 8 | API 구현 | 핸들러+영속성, 통합·계약 테스트 GREEN | 🟡 |
+| 9 | 통합·계약 검증 | 테스트 DB/스텁 대상 suite + 계약 적합성 | 🟠 |
+| 10 | **🔁 리뷰 루프** | `06-review/r<k>.md`, 통과까지 | **하드스톱** |
+| 11 | 종합 검증 | `05-traceability.md` 채움 + `07-verify.md` | — |
+| 12 | **🚪 Gate 2** | `08-completion.md` + 패키지 | **하드스톱** |
+
+**이 영역의 특징**
+- **테스트 = 3-layer** (`references/verification.md`):
+  1. **로직** (순수 유닛 — DB/HTTP import 없음)
+  2. **통합** (테스트 DB, 마이그레이션 적용 — 영속성·제약·**트랜잭션 롤백·부분쓰기 없음**)
+  3. **API 계약** (실제 엔드포인트 — HTTP 상태·바디 형태·**머신 에러코드**가 명세와 일치)
+- **Phase 2 갭 분석에 백엔드 필수 축** — 인증/인가 · 입력검증 · **멱등성** · **트랜잭션/일관성** · **동시성/락** · rate limit · 페이지네이션 계약 · **에러 모델**(상태코드+머신코드) · 외부호출 실패(timeout/retry).
+- **Phase 9 = 통합·계약 검증** — 실제 테스트 DB(또는 스텁) 대상으로 suite 실행, 계약 적합성 확인.
+- **설계 초점** — 엔드포인트(method/path/auth), req/res 스키마+에러코드, DB 스키마+마이그레이션, 트랜잭션 경계.
+- **마이그레이션** — 파괴적 자동 실행 금지. 가역·additive로 설계해 사용자가 적용.
+- **코드 커버리지** — 유닛+통합 레이어 계측, branch 중심, 순수 로직 ≥90%.
+
+---
+
+## 🔗 풀스택 — `/spec-to-code-fullstack`
+
+**얇은 조율자** — 자체 검증 없음. ① 두 영역이 공유할 **API 계약(`api-contract.md`)** 을 사용자와 합의 → ② `spec-to-code-backend` 실행 → ③ `spec-to-code-frontend` 실행. 각 절반은 위에서 설명한 **자기 12-페이즈 흐름을 그대로** 돕니다(각자 게이트·훅·버전 폴더·deferred). 한쪽이 계약을 바꿔야 하면 `api-contract.md` 를 고쳐 양쪽에 다시 알림 — 조용히 어긋나지 않게.
+
+```
+feature.md → [API 계약 합의] → backend 전체 실행 → frontend 전체 실행
+```
+
+---
+
+## 산출물 저장 구조
 
 기능별 `docs/spec-to-code/<slug>/` 에 **버전 폴더**로 저장 (마크다운, 워크플로우 순서대로 번호):
 
 ```
 docs/spec-to-code/<slug>/
-├── index.md · CHANGELOG.md · deferred.md(TODO) · source/   # 공통
+├── index.md · CHANGELOG.md · deferred.md(TODO) · source/   # 공통 (버전 무관)
 └── v1/  00-behavior-grid · 01-working-spec · 02-resolved-spec · 03-design
        04-test-doc · 05-traceability · 06-review/ · 07-verify · 08-completion
 ```
-코드·테스트는 doc home이 아니라 프로젝트 자체 위치에. 업데이트는 `v2/` 생성 후 직전 버전과 diff.
+
+코드·테스트는 doc home이 아니라 프로젝트 자체 위치에. 업데이트는 `v2/` 생성 후 직전 버전과 diff (전체 suite 회귀 검사).
 
 ### 각 파일의 역할
 
-**버전별 (`v<N>/`)** — 워크플로우 순서대로:
+**버전별 (`v<N>/`)** — 워크플로우 순서대로. *(FE/BE 차이는 위 각 파트의 "특징" 참고)*
 
 | 파일 | 역할 | 게이트 |
 |---|---|---|
-| `00-behavior-grid.md` | **전체 동작 격자.** 축(입력·상태·역할·플래그·외부호출 결과…)×값을 카르테시안 곱으로 펼쳐 **빈 칸 없이** 결정한 결정표/상태×이벤트 매트릭스. *기획서의 구멍만이 아니라 전체 동작을 분해한 것*이며, 테스트 커버리지의 단위(셀). | (hook이 02 전 강제) |
-| `01-working-spec.md` | 어떤 포맷이든 정규화한 **기획서 스냅샷** — 이후 업데이트 diff의 기준선. | — |
-| `02-resolved-spec.md` | 갭을 사용자와 해소해 **확정된 명세** (결정·케이스·엣지·에러 확정). | 🚪 Gate 1 |
-| `03-design.md` | **완전한 개발 문서** — 모든 파일·경로, 함수 시그니처, 빠짐없는 동작 명세, 통합점. | 🚪 Tests gate |
-| `04-test-doc.md` | 테스트 **계획→리포트** + QA가 코드 없이 읽는 **per-test 명세**(검증목적·전제조건·스텝·기대결과·🔍수동 QA 절차·의심 변형). | 🚪 Tests gate |
-| `05-traceability.md` | **양방향 커버리지 증명** — 기획서 동작 ↔ 셀 ↔ 테스트 ↔ 코드 매핑표 (빈 칸 = 미완성). | (Gate 2 전 채움) |
+| `00-behavior-grid.md` | **전체 동작 격자.** 축×값 카르테시안 곱을 **빈 칸 없이** 결정한 결정표/상태×이벤트 매트릭스. *기획서의 구멍만이 아니라 전체 동작을 분해한 것*이며 테스트 커버리지의 단위(셀). | (hook이 02 전 강제) |
+| `01-working-spec.md` | 어떤 포맷이든 정규화한 **기획서 스냅샷** — 업데이트 diff 기준선. | — |
+| `02-resolved-spec.md` | 갭을 사용자와 해소한 **확정 명세** (결정·케이스·엣지·에러). | 🚪 Gate 1 |
+| `03-design.md` | **완전한 개발 문서** — FE: 파일·컴포넌트·시그니처 / BE: 엔드포인트·스키마·DB·에러모델. | 🚪 Tests gate |
+| `04-test-doc.md` | 테스트 **계획→리포트** + QA가 코드 없이 읽는 **per-test 명세**(검증목적·전제조건·스텝·기대결과·🔍수동 QA·의심 변형) + **코드 커버리지 수치·미커버 분류**. | 🚪 Tests gate |
+| `05-traceability.md` | **양방향 커버리지 증명** — 기획서 동작 ↔ 셀 ↔ 테스트 ↔ 코드 (빈 칸 = 미완성). | (Gate 2 전 채움) |
 | `06-review/r<k>.md` | **라운드별 독립 리뷰** — blind 발견(이전 라운드 안 봄) + non-blind closure 확인. 모든 라운드 보존. | 🔁 리뷰 루프 |
-| `07-verify.md` | **종합 검증** — 양방향 셀 커버리지·적합성·추적성·로직-UI 분리 감사. | (Gate 2 전) |
+| `07-verify.md` | **종합 검증** — 양방향 셀 커버리지 · 코드 커버리지 · 적합성 · 추적성 · 로직-IO 분리 감사. | (Gate 2 전) |
 | `08-completion.md` | **완료 요약** — 실행법, 검증 결과, 잔여 항목. | 🚪 Gate 2 |
 
 **공통 (slug 루트, 버전 무관)**:
@@ -148,10 +228,8 @@ docs/spec-to-code/<slug>/
 |---|---|
 | `index.md` | 산출물 목차/매니페스트 |
 | `CHANGELOG.md` | 버전별 변경 로그 |
-| `deferred.md` | 보류·TODO 파킹랏 (재방문 트리거와 함께 — 무엇도 조용히 누락되지 않게) |
+| `deferred.md` | 보류·TODO 파킹랏. 연동 대기 항목은 **Where(어디 stub)·What(뭐가 빠짐)·Done-when(언제 풀림)** 상세 블록 — 무엇도 조용히 누락되지 않게 |
 | `source/` | 원본 기획서 원문 보관 |
-
-> **`00-behavior-grid.md` 는 필수다.** Phase 2에서 축을 나열하고 결정표/상태×이벤트 매트릭스를 **빈 칸 없이** 채운 뒤에야 `02-resolved-spec.md` 를 쓸 수 있다(hook이 강제). 멀티스크린/멀티엔드포인트면 `gap-hunter` 팬아웃 + 적대적 크리틱이 필수. 테스트는 케이스가 아니라 **격자 셀(등가 클래스·경계·보완)마다 1개**로 만들어, 추적성·종합검증이 **양방향**으로 "모든 기획서 동작 → 셀 → 테스트 → 코드"를 확인한다.
 
 📖 **실제 런 예시**: [`examples/example-run-product-search.md`](plugins/spec-to-code/examples/example-run-product-search.md) — 불완전한 4줄 기획서 → 검증된 React 코드 전 과정.
 
